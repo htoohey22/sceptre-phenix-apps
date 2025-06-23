@@ -25,14 +25,14 @@ class Kafka(ComponentBase):
         #excel starts timestamps at 30th, Decemember, 1899
         startTime = datetime(1899, 12, 30)
         timeDiff =  inTime - startTime
-
+        
         #convert to excel format
         newTime = timeDiff.days + (timeDiff.seconds + timeDiff.microseconds / 1_000_000) / 86400
         return newTime
 
     def start(self):
         logger.log('INFO', f'Starting user component: {self.name}')
-        print("TEST OUTPUT")
+        logger.log('TEST')
 
         #get all variables from tags
         bootstrapServers = self.metadata.get("bootstrapServers", ["172.20.0.74:9092"])
@@ -130,7 +130,7 @@ class Kafka(ComponentBase):
                             if include:
                                 file.write(json.dumps(data) + "\n")
                                 file.flush()
-     
+
         except Exception as e:
             pass
         finally:
