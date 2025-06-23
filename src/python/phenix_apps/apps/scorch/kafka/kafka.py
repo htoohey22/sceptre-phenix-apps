@@ -32,7 +32,6 @@ class Kafka(ComponentBase):
 
     def start(self):
         logger.log('INFO', f'Starting user component: {self.name}')
-        logger.log('TEST')
 
         #get all variables from tags
         bootstrapServers = self.metadata.get("bootstrapServers", ["172.20.0.74:9092"])
@@ -146,8 +145,8 @@ class Kafka(ComponentBase):
         #no cleanup, currently it just makes and populates the one csv file
         logger.log('INFO', f'Cleaning up user component: {self.name}')
 
-    def main():
-        Kafka()
+def main():
+    Kafka()
     
-    if __name__ == '__main__':
-        main()
+if __name__ == '__main__':
+    main()
