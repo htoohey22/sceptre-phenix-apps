@@ -34,7 +34,7 @@ class kafka(ComponentBase):
         logger.log('INFO', f'Starting user component: {self.name}')
 
         #get all variables from tags
-        bootstrapServers = self.metadata.get("bootstrapServers", ["172.20.0.74:9092"])
+        bootstrapServers = self.metadata.get("bootstrapServers", ["172.20.0.63:9092"])
         allScan = self.metadata.get("allScan", False)
         subscribeTags = self.metadata.get("subscribeTags", ["default"])
         critLoad = self.metadata.get("critLoad", "").lower()
