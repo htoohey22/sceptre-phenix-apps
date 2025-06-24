@@ -55,7 +55,7 @@ class kafka(ComponentBase):
         if allScan:
             consumer.subscribe(pattern='.*')
         else:
-            consumer.subscribe(subscribeTags)
+            consumer.subscribe([subscribeTags])
 
         #store all relevant messages in this list
         relMes = []
