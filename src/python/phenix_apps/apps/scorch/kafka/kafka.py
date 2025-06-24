@@ -35,7 +35,7 @@ class kafka(ComponentBase):
 
         #get all variables from tags
         bootstrapServers = self.metadata.get("bootstrapServers", ["172.20.0.63:9092"])
-        logger.log('INFO', f'bootstrapServers: {self.bootstrapServers}')
+        logger.log('INFO', f'bootstrapServers: {bootstrapServers}')
         allTags = self.metadata.get("allTags", False)
         subscribeTags = self.metadata.get("subscribeTags", ["default"])
         critLoad = self.metadata.get("critLoad", "").lower()
