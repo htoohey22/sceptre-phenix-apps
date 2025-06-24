@@ -3,7 +3,7 @@
 ```yaml
 metadata:
     bootstrapServers: [<string>]
-    allScan: <bool> #boolean indicating if all tags should be scanned or if specific tags should be subscribed to
+    allTags: <bool> #boolean indicating if all tags should be scanned or if specific tags should be subscribed to
     subscribeTags: <list> #list of strings that indiate which tags we will subscribe to
     mode: <string>  #string that can be 'substation', 'critical load', or 'all data'
     #'substation' mode means we will collect data from a general substation by scanning the data name field for a keyword using wildcards
@@ -19,9 +19,9 @@ metadata:
 - metadata:
         components:
           - metadata:
-              allScan: false
+              allTags: false
               bootstrap Servers:
-                - 172.20.0.74:9092
+                - 172.20.0.63:9092
               critLoad: ''
               subscribeTags:
                 - 'bytrerage.power.load'

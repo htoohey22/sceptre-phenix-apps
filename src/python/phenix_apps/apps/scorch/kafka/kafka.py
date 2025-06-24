@@ -35,7 +35,8 @@ class kafka(ComponentBase):
 
         #get all variables from tags
         bootstrapServers = self.metadata.get("bootstrapServers", ["172.20.0.63:9092"])
-        allScan = self.metadata.get("allScan", False)
+        logger.log('INFO', f'bootstrapServer: {self.bootstrapServers}')
+        allTags = self.metadata.get("allTags", False)
         subscribeTags = self.metadata.get("subscribeTags", ["default"])
         critLoad = self.metadata.get("critLoad", "").lower()
         mode = self.metadata.get("mode", "all data")
@@ -52,7 +53,7 @@ class kafka(ComponentBase):
         )
 
         #we either scan all data, or scan subscribed tags only
-        if allScan:
+        if allTags:
             consumer.subscribe(pattern='.*')
         else:
             consumer.subscribe(subscribeTags)
