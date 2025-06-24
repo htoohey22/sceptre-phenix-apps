@@ -36,7 +36,7 @@ class kafka(ComponentBase):
         #get all variables from tags
         bootstrapServers = self.metadata.get("bootstrapServers", ["172.20.0.74:9092"])
         allScan = self.metadata.get("allScan", False)
-        subscribeTags = self.metadata.get("subscribeTags", [""])
+        subscribeTags = self.metadata.get("subscribeTags", ["default"])
         critLoad = self.metadata.get("critLoad", "").lower()
         mode = self.metadata.get("mode", "all data")
         substation =  self.metadata.get("substation", "")
@@ -55,7 +55,7 @@ class kafka(ComponentBase):
         if allScan:
             consumer.subscribe(pattern='.*')
         else:
-            consumer.subscribe(["bytrerage.power.load"]) #TODO: fix this to not be hardcoded
+            consumer.subscribe(subscribeTags)
 
         #store all relevant messages in this list
         relMes = []
