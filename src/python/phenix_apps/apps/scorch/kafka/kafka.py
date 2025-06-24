@@ -145,8 +145,8 @@ class Kafka(ComponentBase):
         #no clearnup, currently it just makes and populates the one csv file
         logger.log('INFO', f'Cleaning up user component: {self.name}')
 
-    def main():
-        Kafka()
+def main():
+    Kafka()
     
-    if __name__ == '__main__':
-        main()
+if __name__ == '__main__':
+    main()
