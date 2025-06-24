@@ -6,7 +6,7 @@ from kafka import KafkaConsumer
 from kafka.errors import KafkaError
 from datetime import datetime
 
-class Kafka(ComponentBase):
+class kafka(ComponentBase):
     def __init__(self):
         ComponentBase.__init__(self, 'kafka')
         self.execute_stage()
@@ -146,7 +146,7 @@ class Kafka(ComponentBase):
         logger.log('INFO', f'Cleaning up user component: {self.name}')
 
 def main():
-    Kafka()
+    kafka()
     
 if __name__ == '__main__':
     main()
