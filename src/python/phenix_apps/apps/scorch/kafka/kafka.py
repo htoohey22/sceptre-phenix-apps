@@ -44,7 +44,7 @@ class kafka(ComponentBase):
 
         #kafka consumer
         consumer = KafkaConsumer(
-            #bootstrap ip and port could probably be a variable in the future
+            #bootstrap ip and port could probably be separate variables in the future
             bootstrap_servers = bootstrapServers,
             auto_offset_reset='latest',
             enable_auto_commit=False,
@@ -78,8 +78,8 @@ class kafka(ComponentBase):
                                 continue
                             
                             #parse the time and convert it to excel time
-                            currTime = parseTime(data["timestamp"])
-                            currTime = timeConverter(currTime)
+                            currTime = self.parseTime(data["timestamp"])
+                            currTime = self.timeConverter(currTime)
 
                             #set the csv to use excel time instead of timestamps
                             data["timestamp"] = currTime
