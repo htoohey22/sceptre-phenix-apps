@@ -1,4 +1,4 @@
-import json, itertools, threading, time, sys, csv, re
+import json, itertools, threading, time, sys, csv, re, os
 
 from phenix_apps.apps.scorch import ComponentBase
 from phenix_apps.common import logger, utils
@@ -55,7 +55,7 @@ class kafka(ComponentBase):
         if allScan:
             consumer.subscribe(pattern='.*')
         else:
-            consumer.subscribe(["bytrerage.power.load"])
+            consumer.subscribe(["bytrerage.power.load"]) #TODO: fix this to not be hardcoded
 
         #store all relevant messages in this list
         relMes = []
