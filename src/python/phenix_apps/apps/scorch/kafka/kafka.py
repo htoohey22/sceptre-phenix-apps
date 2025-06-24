@@ -85,6 +85,8 @@ class kafka(ComponentBase):
                             data["timestamp"] = currTime
                             name = data.get("name", "").lower()
 
+                            #if all data include message, if critical load only include th message when the name matches the load,
+                            #if substation only include name if the substation name is in the data name
                             include = (
                                 (mode == "all data") or
                                 (mode == "critical load" and name == critLoad) or
@@ -101,10 +103,11 @@ class kafka(ComponentBase):
                                     if not wrote_header:
                                         writer.writeheader()
                                         wrote_header = True
-
+                                
+                                #write the data and flush the data to ensure that we don't save to buffer
                                 writer.writerow(data)
                                 file.flush()
-            else:
+            else: #if not CSV, outpt JSON
                 with open(output_dir, 'out.txt', 'a', encoding='utf-8') as file:
                     while True:
                         for message in consumer:
