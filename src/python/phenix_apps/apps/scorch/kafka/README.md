@@ -1,3 +1,10 @@
+# minimega (kafka) Component
+Collects and filters desired Kafka data into CSV/ JSON format, and converts values to be eaisly importable to Excel.
+
+```
+type: kafka
+exe:  phenix-scorch-component-kafka
+```
 ## Metadata Options
 
 ```yaml
