@@ -45,6 +45,7 @@ class kafka(ComponentBase):
         substation =  self.metadata.get("substation", "")
         csvOut = self.metadata.get("csv", True)
 
+        '''
         logger.log('INFO', f'bootstrapServers: {bootstrapServers}')
         logger.log('INFO', f'allTags: {allTags}')
         logger.log('INFO', f'subscribeTags: {subscribeTags}')
@@ -52,6 +53,7 @@ class kafka(ComponentBase):
         logger.log('INFO', f'mode: {mode}')
         logger.log('INFO', f'substation: {substation}')
         logger.log('INFO', f'csvOut: {csvOut}')
+        '''
 
 
         #kafka consumer
