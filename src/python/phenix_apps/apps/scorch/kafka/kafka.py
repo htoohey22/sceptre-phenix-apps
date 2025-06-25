@@ -145,7 +145,7 @@ class kafka(ComponentBase):
 
         except Exception as e:
             logger.log('INFO', f'FAILED: {output_dir}')
-            pass
+            except Exception as e: print(e)
         finally:
             consumer.close()
 
