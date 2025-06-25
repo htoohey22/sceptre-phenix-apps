@@ -95,26 +95,24 @@ class kafka(ComponentBase):
 
                             #for each topic, check if this message has the desired key and value
                             for topic in topics:
-                                key = topic.get("key")
-                                value = topic.get("value")
+                                for filterVal in topic.get("filter", []):
+                                    key = filterVal.get("key", "")
+                                    value = filterVal.get("value", "")
 
-                                keyVal = data.get(key, "").lower()
-                                valueVal = data.get(value, ).lower()
+                                    if str(data.get(key, "")).lower == value:
+                                        all_keys.update(data.keys())
 
-                                if key == keyVal and value == valueVal:
-                                    all_keys.update(data.keys())
-
-                                    if writer is None:
-                                        writer = csv.DictWriter(file, fieldnames=sorted(all_keys), extrasaction='ignore')
+                                        if writer is None:
+                                            writer = csv.DictWriter(file, fieldnames=sorted(all_keys), extrasaction='ignore')
+                                            
+                                            #check if the first line in the csv has been written yet, write it if not
+                                            if not wrote_header:
+                                                writer.writeheader()
+                                                wrote_header = True
                                         
-                                        #check if the first line in the csv has been written yet, write it if not
-                                        if not wrote_header:
-                                            writer.writeheader()
-                                            wrote_header = True
-                                    
-                                    #write the data and flush the data to ensure that we don't save to buffer
-                                    writer.writerow(data)
-                                    file.flush()
+                                        #write the data and flush the data to ensure that we don't save to buffer
+                                        writer.writerow(data)
+                                        file.flush()
 
             else: #if not CSV, output JSON
                 with open(os.path.join(output_dir, 'out.txt'), mode='a', encoding='utf-8') as file:
@@ -138,18 +136,24 @@ class kafka(ComponentBase):
 
                             #for each topic, check if this message has the desired key and value
                             for topic in topics:
-                                key = topic.get("key")
-                                value = topic.get("value")
-                                
-                                keyVal = data.get(key, "").lower()
-                                valueVal = data.get(value, ).lower()
+                                for filterVal in topic.get("filter", []):
+                                    key = filterVal.get("key", "")
+                                    value = filterVal.get("value", "")
 
-                                if key == keyVal and value == valueVal:
-                                    all_keys.update(data.keys())
-                                    
-                                    #write the data and flush the data to ensure that we don't save to buffer
-                                    file.write(json.dumps(data) + "\n")
-                                    file.flush()
+                                    if str(data.get(key, "")).lower == value:
+                                        all_keys.update(data.keys())
+
+                                        if writer is None:
+                                            writer = csv.DictWriter(file, fieldnames=sorted(all_keys), extrasaction='ignore')
+                                            
+                                            #check if the first line in the csv has been written yet, write it if not
+                                            if not wrote_header:
+                                                writer.writeheader()
+                                                wrote_header = True
+                                        
+                                        #write the data and flush the data to ensure that we don't save to buffer
+                                        file.write(json.dumps(data) + "\n")
+                                        file.flush()
 
         except Exception as e:
             logger.log('INFO', f'FAILED: {e}')
