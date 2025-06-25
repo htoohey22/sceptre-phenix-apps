@@ -77,6 +77,10 @@ class kafka(ComponentBase):
         all_keys = set()
         wrote_header = False
 
+        if csvOut:
+            with open(output_dir, 'out.csv', mode="a", newline="", encoding="utf-8") as file:
+                logger.log('INFO', f'1 opening csv output in: {output_dir}')
+
         try:
             #run the consumer, try to find all messages with the relevant tags
             if csvOut:
@@ -146,7 +150,8 @@ class kafka(ComponentBase):
                                 file.flush()
 
         except Exception as e:
-            except Exception as e: logger.log('INFO', f'FAILED: {e}')
+            except Exception as e:
+                logger.log('INFO', f'FAILED: {e}')
         finally:
             consumer.close()
 
