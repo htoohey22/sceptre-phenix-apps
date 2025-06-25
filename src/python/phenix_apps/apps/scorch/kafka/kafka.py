@@ -35,13 +35,21 @@ class kafka(ComponentBase):
 
         #get all variables from tags
         bootstrapServers = self.metadata.get("bootstrapServers", ["172.20.0.63:9092"])
-        logger.log('INFO', f'bootstrapServers: {bootstrapServers}')
         allTags = self.metadata.get("allTags", False)
         subscribeTags = self.metadata.get("subscribeTags", ["default"])
         critLoad = self.metadata.get("critLoad", "").lower()
         mode = self.metadata.get("mode", "all data")
         substation =  self.metadata.get("substation", "")
         csvOut = self.metadata.get("csv", True)
+
+        logger.log('INFO', f'bootstrapServers: {bootstrapServers}')
+        logger.log('INFO', f'allTags: {allTags}')
+        logger.log('INFO', f'subscribeTags: {subscribeTags}')
+        logger.log('INFO', f'critLoad: {critLoad}')
+        logger.log('INFO', f'mode: {mode}')
+        logger.log('INFO', f'substation: {substation}')
+        logger.log('INFO', f'csvOut: {csvOut}')
+
 
         #kafka consumer
         consumer = KafkaConsumer(
@@ -71,6 +79,7 @@ class kafka(ComponentBase):
             #run the consumer, try to find all messages with the relevant tags
             if csvOut:
                 with open(output_dir, 'out.csv', mode="a", newline="", encoding="utf-8") as file:
+                    logger.log('INFO', f'opening csv output in: {output_dir}')
                     writer = None
                     while True:
                         for message in consumer:
@@ -150,8 +159,7 @@ class kafka(ComponentBase):
         logger.log('INFO', f'Cleaning up user component: {self.name}')
 
 def main():
-    logger.log('INFO', f'TEST')
-    print("TEST,TEST,TEST")
+    logger.log('INFO', f'TEST OUTPUT')
     kafka()
     
 if __name__ == '__main__':
