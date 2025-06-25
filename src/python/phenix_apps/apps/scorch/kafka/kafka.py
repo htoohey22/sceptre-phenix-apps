@@ -6,6 +6,8 @@ from kafka import KafkaConsumer
 from kafka.errors import KafkaError
 from datetime import datetime
 
+run_loop = False
+
 class kafka(ComponentBase):
     def __init__(self):
         ComponentBase.__init__(self, 'kafka')
@@ -31,6 +33,7 @@ class kafka(ComponentBase):
         return newTime
 
     def start(self):
+        run_loop = True
         logger.log('INFO', f'Starting user component: {self.name}')
 
         #get all variables from tags
@@ -83,7 +86,7 @@ class kafka(ComponentBase):
                 with open(os.path.join(output_dir, 'out.csv'), mode="a", newline="", encoding="utf-8") as file:
                     logger.log('INFO', f'opening csv output in: {output_dir}')
                     writer = None
-                    while True:
+                    while run_loop:
                         for message in consumer:
                             data = message.value
                             if not isinstance(data, dict) and "timestamp" in data:
@@ -120,8 +123,8 @@ class kafka(ComponentBase):
                                 writer.writerow(data)
                                 file.flush()
             else: #if not CSV, outpt JSON
-                with open(output_dir, 'out.txt', 'a', encoding='utf-8') as file:
-                    while True:
+                with open(os.path.join(output_dir, 'out.txt'), mode='a', encoding='utf-8') as file:
+                    while run_loop:
                         for message in consumer:
                             data = message.value
                             if not isinstance(data, dict) and "timestamp" in data:
@@ -153,8 +156,8 @@ class kafka(ComponentBase):
         logger.log('INFO', f'Configured user component: {self.name}')
 
     def stop(self):
-        #it should run as long as the experiment runs, so I don't think anything needs to be here
         logger.log('INFO', f'Stopping user component: {self.name}')
+        run_loop = False
 
     def cleanup(self):
         #no cleanup, currently it just makes and populates the one csv file
