@@ -150,7 +150,8 @@ class kafka(ComponentBase):
         logger.log('INFO', f'Cleaning up user component: {self.name}')
 
 def main():
-    logger.log('DBG', f'TEST')
+    logger.log('INFO', f'TEST')
+    print("TEST,TEST,TEST")
     kafka()
     
 if __name__ == '__main__':
