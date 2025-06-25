@@ -56,7 +56,10 @@ class kafka(ComponentBase):
 
         #get all topic names
         for topic in topics:
-            subscribedTopics.append(topic.get("name"))
+            name =  topic.get("name")
+            if name:
+                subscribedTopics.append(name)
+            
 
         #subscribe to all topic names
         consumer.subscribe(subscribedTopics)
