@@ -70,6 +70,8 @@ class kafka(ComponentBase):
         relMes = []
 
         output_dir = self.base_dir
+        logger.log('INFO', f'Output Directory: {output_dir}')
+
         os.makedirs(output_dir, exist_ok=True)
 
         all_keys = set()
@@ -144,8 +146,7 @@ class kafka(ComponentBase):
                                 file.flush()
 
         except Exception as e:
-            logger.log('INFO', f'FAILED: {output_dir}')
-            except Exception as e: print(e)
+            except Exception as e: logger.log('INFO', f'FAILED: {e}')
         finally:
             consumer.close()
 
