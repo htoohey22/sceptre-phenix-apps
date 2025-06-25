@@ -125,9 +125,11 @@ class kafka(ComponentBase):
                                 file.flush()
             else: #if not CSV, output JSON
                 with open(os.path.join(output_dir, 'out.txt'), mode='a', encoding='utf-8') as file:
+                    logger.log('INFO', f'ENTEREDJSON SECTION')
                     while run_loop:
                         for message in consumer:
                             data = message.value
+                            logger.log('INFO', f'Data: {data}')
                             if not isinstance(data, dict) and "timestamp" in data:
                                 continue
                             
@@ -147,7 +149,7 @@ class kafka(ComponentBase):
 
                             if include:
                                 logger.log('INFO', f'writing to JSON file')
-                                file.write(json.dumps(data) + "\n")
+                                #file.write(json.dumps(data) + "\n")
                                 logger.log('INFO', f'Data: {data}')
                                 file.flush()
 
