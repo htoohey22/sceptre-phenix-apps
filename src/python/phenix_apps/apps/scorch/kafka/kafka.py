@@ -121,7 +121,6 @@ class kafka(ComponentBase):
                                 
                                 #write the data and flush the data to ensure that we don't save to buffer
                                 writer.writerow(data)
-                                logger.log('INFO', f'Writing: {data}')
                                 file.flush()
             else: #if not CSV, outpt JSON
                 with open(os.path.join(output_dir, 'out.txt'), mode='a', encoding='utf-8') as file:
