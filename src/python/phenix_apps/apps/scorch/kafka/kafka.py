@@ -45,7 +45,7 @@ class kafka(ComponentBase):
         substation =  self.metadata.get("substation", "")
         csvOut = self.metadata.get("csv", True)
 
-        #logger.log('INFO', f'branch name: {{BRANCH_NAME}}')
+        logger.log('INFO', f'branch name: {{{BRANCH_NAME}}}')
 
         '''
         logger.log('INFO', f'bootstrapServers: {bootstrapServers}')
