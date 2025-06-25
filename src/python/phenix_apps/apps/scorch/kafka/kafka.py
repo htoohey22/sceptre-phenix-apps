@@ -40,7 +40,7 @@ class kafka(ComponentBase):
         #get all variables from tags
         bootstrapServers = self.metadata.get("bootstrapServers", ["172.20.0.63:9092"])
         topics = self.metadata.get("topics", [])
-        csv = self.metadata.get("csv", True) #if false output a JSON
+        csvBool = self.metadata.get("csv", True) #if false output a JSON
 
         #kafka consumer
         consumer = KafkaConsumer(
@@ -71,7 +71,7 @@ class kafka(ComponentBase):
 
         try:
             #run the consumer, try to find all messages with the relevant tags
-            if csv:
+            if csvBool:
                 with open(os.path.join(output_dir, 'out.csv'), mode="a", newline="", encoding="utf-8") as file:
                     writer = None
                     while run_loop:
@@ -99,7 +99,7 @@ class kafka(ComponentBase):
                                     key = filterVal.get("key", "")
                                     value = filterVal.get("value", "")
 
-                                    if str(data.get(key, "")).lower == value:
+                                    if str(data.get(key, "")).lower() == value:
                                         all_keys.update(data.keys())
 
                                         if writer is None:
@@ -140,17 +140,7 @@ class kafka(ComponentBase):
                                     key = filterVal.get("key", "")
                                     value = filterVal.get("value", "")
 
-                                    if str(data.get(key, "")).lower == value:
-                                        all_keys.update(data.keys())
-
-                                        if writer is None:
-                                            writer = csv.DictWriter(file, fieldnames=sorted(all_keys), extrasaction='ignore')
-                                            
-                                            #check if the first line in the csv has been written yet, write it if not
-                                            if not wrote_header:
-                                                writer.writeheader()
-                                                wrote_header = True
-                                        
+                                    if str(data.get(key, "")).lower() == value:
                                         #write the data and flush the data to ensure that we don't save to buffer
                                         file.write(json.dumps(data) + "\n")
                                         file.flush()
