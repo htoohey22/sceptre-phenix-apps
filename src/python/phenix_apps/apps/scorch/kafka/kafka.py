@@ -150,8 +150,7 @@ class kafka(ComponentBase):
                                 file.flush()
 
         except Exception as e:
-            except Exception as e:
-                logger.log('INFO', f'FAILED: {e}')
+            logger.log('INFO', f'FAILED: {e}')
         finally:
             consumer.close()
 
