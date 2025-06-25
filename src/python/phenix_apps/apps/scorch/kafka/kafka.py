@@ -121,8 +121,9 @@ class kafka(ComponentBase):
                                 
                                 #write the data and flush the data to ensure that we don't save to buffer
                                 writer.writerow(data)
+                                logger.log('INFO', f'Data: {data}')
                                 file.flush()
-            else: #if not CSV, outpt JSON
+            else: #if not CSV, output JSON
                 with open(os.path.join(output_dir, 'out.txt'), mode='a', encoding='utf-8') as file:
                     while run_loop:
                         for message in consumer:
@@ -145,7 +146,9 @@ class kafka(ComponentBase):
                             )
 
                             if include:
+                                logger.log('INFO', f'writing to JSON file')
                                 file.write(json.dumps(data) + "\n")
+                                logger.log('INFO', f'Data: {data}')
                                 file.flush()
 
         except Exception as e:
@@ -164,7 +167,6 @@ class kafka(ComponentBase):
         logger.log('INFO', f'Cleaning up user component: {self.name}')
 
 def main():
-    logger.log('INFO', f'TEST OUTPUT')
     kafka()
     
 if __name__ == '__main__':
