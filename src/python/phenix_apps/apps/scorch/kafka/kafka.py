@@ -33,29 +33,14 @@ class kafka(ComponentBase):
         return newTime
 
     def start(self):
+        global run_loop
         run_loop = True
         logger.log('INFO', f'Starting user component: {self.name}')
 
         #get all variables from tags
         bootstrapServers = self.metadata.get("bootstrapServers", ["172.20.0.63:9092"])
-        allTags = self.metadata.get("allTags", False)
-        subscribeTags = self.metadata.get("subscribeTags", ["default"])
-        critLoad = self.metadata.get("critLoad", "").lower()
-        mode = self.metadata.get("mode", "all data")
-        substation =  self.metadata.get("substation", "")
-        csvOut = self.metadata.get("csv", True)
-
-        logger.log('INFO', f'branch name: {{{BRANCH_NAME}}}')
-
-        '''
-        logger.log('INFO', f'bootstrapServers: {bootstrapServers}')
-        logger.log('INFO', f'allTags: {allTags}')
-        logger.log('INFO', f'subscribeTags: {subscribeTags}')
-        logger.log('INFO', f'critLoad: {critLoad}')
-        logger.log('INFO', f'mode: {mode}')
-        logger.log('INFO', f'substation: {substation}')
-        logger.log('INFO', f'csvOut: {csvOut}')
-        '''
+        topics = self.metadata.get("topics", [])
+        csv = self.metadata.get("csv", True) #if false output a JSON
 
         #kafka consumer
         consumer = KafkaConsumer(
@@ -66,18 +51,19 @@ class kafka(ComponentBase):
             value_deserializer=lambda m: json.loads(m.decode('utf-8'))
         )
 
-        #we either scan all data, or scan subscribed tags only
-        if allTags:
-            consumer.subscribe(pattern='.*')
-        else:
-            consumer.subscribe(subscribeTags)
+        #list of all topic names we want the consumer to subscribe to
+        subscribedTopics = []
 
-        #store all relevant messages in this list
-        relMes = []
+        #get all topic names
+        for topic in topics:
+            subscribedTopics.append(topic.get("name"))
 
+        #subscribe to all topic names
+        consumer.subscribe(subscribedTopics)
+
+        #get and output the output directory to the logger
         output_dir = self.base_dir
         logger.log('INFO', f'Output Directory: {output_dir}')
-
         os.makedirs(output_dir, exist_ok=True)
 
         all_keys = set()
@@ -85,13 +71,18 @@ class kafka(ComponentBase):
 
         try:
             #run the consumer, try to find all messages with the relevant tags
-            if csvOut:
+            if csv:
                 with open(os.path.join(output_dir, 'out.csv'), mode="a", newline="", encoding="utf-8") as file:
-                    logger.log('INFO', f'opening csv output in: {output_dir}')
                     writer = None
                     while run_loop:
                         for message in consumer:
+
+                            #grab unfiltered/ unprocessed message data
                             data = message.value
+
+                            #### PROBABLY DELETE ALL OF THIS TIMESTAMP IN THE FUTURE ####
+
+                            #if there is not a timestamp, move on
                             if not isinstance(data, dict) and "timestamp" in data:
                                 continue
                             
@@ -101,35 +92,40 @@ class kafka(ComponentBase):
 
                             #set the csv to use excel time instead of timestamps
                             data["timestamp"] = currTime
-                            name = data.get("name", "").lower()
 
-                            #if all data include message, if critical load only include th message when the name matches the load,
-                            #if substation only include name if the substation name is in the data name
-                            include = (
-                                (mode == "all data") or
-                                (mode == "critical load" and name == critLoad) or
-                                (mode == "substation" and substation in name)
-                            )
+                            #for each topic, check if this message has the desired key and value
+                            for topic in topics:
+                                key = topic.get("key")
+                                value = topic.get("value")
 
-                            if include:
-                                all_keys.update(data.keys())
+                                keyVal = data.get(key, "").lower()
+                                valueVal = data.get(value, ).lower()
 
-                                if writer is None:
-                                    writer = csv.DictWriter(file, fieldnames=sorted(all_keys), extrasaction='ignore')
+                                if key == keyVal and value == valueVal:
+                                    all_keys.update(data.keys())
+
+                                    if writer is None:
+                                        writer = csv.DictWriter(file, fieldnames=sorted(all_keys), extrasaction='ignore')
+                                        
+                                        #check if the first line in the csv has been written yet, write it if not
+                                        if not wrote_header:
+                                            writer.writeheader()
+                                            wrote_header = True
                                     
-                                    #check if the first line in the csv has been written yet, write it if not
-                                    if not wrote_header:
-                                        writer.writeheader()
-                                        wrote_header = True
-                                
-                                #write the data and flush the data to ensure that we don't save to buffer
-                                writer.writerow(data)
-                                file.flush()
+                                    #write the data and flush the data to ensure that we don't save to buffer
+                                    writer.writerow(data)
+                                    file.flush()
+
             else: #if not CSV, output JSON
                 with open(os.path.join(output_dir, 'out.txt'), mode='a', encoding='utf-8') as file:
                     while run_loop:
                         for message in consumer:
+                            #grab unfiltered/ unprocessed message data
                             data = message.value
+
+                            #### PROBABLY DELETE ALL OF THIS TIMESTAMP IN THE FUTURE ####
+
+                            #if there is not a timestamp, move on
                             if not isinstance(data, dict) and "timestamp" in data:
                                 continue
                             
@@ -137,19 +133,23 @@ class kafka(ComponentBase):
                             currTime = self.parseTime(data["timestamp"])
                             currTime = self.timeConverter(currTime)
 
-                            #set the json file to use excel time instead of timestamps
+                            #set the csv to use excel time instead of timestamps
                             data["timestamp"] = currTime
-                            name = data.get("name", "").lower()
 
-                            include = (
-                                (mode == "all data") or
-                                (mode == "critical load" and name == critLoad) or
-                                (mode == "substation" and substation in name)
-                            )
+                            #for each topic, check if this message has the desired key and value
+                            for topic in topics:
+                                key = topic.get("key")
+                                value = topic.get("value")
+                                
+                                keyVal = data.get(key, "").lower()
+                                valueVal = data.get(value, ).lower()
 
-                            if include:
-                                file.write(json.dumps(data) + "\n")
-                                file.flush()
+                                if key == keyVal and value == valueVal:
+                                    all_keys.update(data.keys())
+                                    
+                                    #write the data and flush the data to ensure that we don't save to buffer
+                                    file.write(json.dumps(data) + "\n")
+                                    file.flush()
 
         except Exception as e:
             logger.log('INFO', f'FAILED: {e}')
@@ -159,6 +159,7 @@ class kafka(ComponentBase):
         logger.log('INFO', f'Configured user component: {self.name}')
 
     def stop(self):
+        global run_loop
         run_loop = False
         logger.log('INFO', f'Stopping user component: {self.name}')
 
