@@ -144,6 +144,7 @@ class kafka(ComponentBase):
                                 file.flush()
 
         except Exception as e:
+            logger.log('INFO', f'FAILED: {output_dir}')
             pass
         finally:
             consumer.close()
