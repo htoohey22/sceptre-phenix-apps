@@ -45,7 +45,7 @@ class kafka(ComponentBase):
                 #handle wildcards in the name
                 if '*' in name:
                     filteredName = name.split('*')
-                    subscribedTopics.append(filteredName[0])
+                    subscribedTopics.append(str(filteredName[0])+'*')
                 elif name:
                     subscribedTopics.append(name)
 
