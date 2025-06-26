@@ -124,9 +124,9 @@ class kafka(ComponentBase):
         logger.log('INFO', f'Configured user component: {self.name}')
 
     def stop(self):
+        logger.log('INFO', f'Stopping user component: {self.name}')
         global run_loop
         run_loop = False
-        logger.log('INFO', f'Stopping user component: {self.name}')
 
     def cleanup(self):
         #no cleanup, currently it just makes and populates the one csv/json file
