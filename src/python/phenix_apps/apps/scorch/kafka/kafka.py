@@ -34,6 +34,7 @@ class kafka(ComponentBase):
 
         #list of all topic names we want the consumer to subscribe to
         subscribedTopics = []
+        foundTopics = False
 
         #get all topic names
         if not topics:
@@ -46,9 +47,16 @@ class kafka(ComponentBase):
                 if '*' in name:
                     filteredName = name.split('*')[0]
                     pattern = f'^{re.escape(filteredName)}.*'
-                    for topic in consumer.topics():
-                        if str(filteredName) in str(topic):
-                            subscribedTopics.append(topic)
+                    logger.log('INFO', f'FILTERED NAME: {filteredName}')
+                    while foundTopics == False:
+                        for topic in consumer.topics():
+                            if str(filteredName) in str(topic):
+                                logger.log('INFO', f'TOPIC: {topic}')
+                                subscribedTopics.append(topic)
+                        if subscribedTopics:
+                            foundTopics = True
+                        else:
+                            time.sleep(5)
                 elif name:
                     subscribedTopics.append(name)
 
