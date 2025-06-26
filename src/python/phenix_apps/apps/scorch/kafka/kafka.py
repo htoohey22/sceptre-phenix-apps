@@ -12,25 +12,6 @@ class kafka(ComponentBase):
     def __init__(self):
         ComponentBase.__init__(self, 'kafka')
         self.execute_stage()
-    
-    #uses regular expressions to convert the time format in the tags to actually be a datetime object
-    def parseTime(self, inTime):
-        timeForm = r"datetime\.datetime\((\d+), (\d+), (\d+), (\d+), (\d+), (\d+), (\d+)\)"
-        match = re.match(timeForm, inTime)
-        if match:
-            sections = list(map(int, match.groups()))
-            return datetime(*sections)
-        return None
-
-    #converts a timestamp into the excel format for timestamps
-    def timeConverter(self, inTime):
-        #excel starts timestamps at 30th, Decemember, 1899
-        startTime = datetime(1899, 12, 30)
-        timeDiff =  inTime - startTime
-        
-        #convert to excel format
-        newTime = timeDiff.days + (timeDiff.seconds + timeDiff.microseconds / 1_000_000) / 86400
-        return newTime
 
     def start(self):
         run_loop = True
@@ -38,23 +19,8 @@ class kafka(ComponentBase):
 
         #get all variables from tags
         bootstrapServers = self.metadata.get("bootstrapServers", ["172.20.0.63:9092"])
-        allTags = self.metadata.get("allTags", False)
-        subscribeTags = self.metadata.get("subscribeTags", ["default"])
-        critLoad = self.metadata.get("critLoad", "").lower()
-        mode = self.metadata.get("mode", "all data")
-        substation =  self.metadata.get("substation", "")
-        csvOut = self.metadata.get("csv", True)
-
-        '''
-        logger.log('INFO', f'bootstrapServers: {bootstrapServers}')
-        logger.log('INFO', f'allTags: {allTags}')
-        logger.log('INFO', f'subscribeTags: {subscribeTags}')
-        logger.log('INFO', f'critLoad: {critLoad}')
-        logger.log('INFO', f'mode: {mode}')
-        logger.log('INFO', f'substation: {substation}')
-        logger.log('INFO', f'csvOut: {csvOut}')
-        '''
-
+        topics = self.metadata.get("topics", None)
+        csvBool = self.metadata.get("csv", True) #if false output a JSON
 
         #kafka consumer
         consumer = KafkaConsumer(
@@ -65,18 +31,25 @@ class kafka(ComponentBase):
             value_deserializer=lambda m: json.loads(m.decode('utf-8'))
         )
 
-        #we either scan all data, or scan subscribed tags only
-        if allTags:
-            consumer.subscribe(pattern='.*')
+        #list of all topic names we want the consumer to subscribe to
+        subscribedTopics = []
+
+        #get all topic names
+        if not topics:
+            logger.log('INFO', f'No topics subscribed to')
         else:
-            consumer.subscribe(subscribeTags)
+            for topic in topics:
+                name =  topic.get("name")
+                if name:
+                    subscribedTopics.append(name)
+        
+        logger.log('INFO', f'Subscribed Topics: {subscribedTopics}')
+        #subscribe to all topic names
+        consumer.subscribe(subscribedTopics)
 
-        #store all relevant messages in this list
-        relMes = []
-
+        #get and output the output directory to the logger
         output_dir = self.base_dir
         logger.log('INFO', f'Output Directory: {output_dir}')
-
         os.makedirs(output_dir, exist_ok=True)
 
         all_keys = set()
@@ -84,71 +57,54 @@ class kafka(ComponentBase):
 
         try:
             #run the consumer, try to find all messages with the relevant tags
-            if csvOut:
+            if csvBool:
                 with open(os.path.join(output_dir, 'out.csv'), mode="a", newline="", encoding="utf-8") as file:
-                    logger.log('INFO', f'opening csv output in: {output_dir}')
                     writer = None
                     while run_loop:
                         for message in consumer:
+
+                            #grab unfiltered/ unprocessed message data
                             data = message.value
-                            if not isinstance(data, dict) and "timestamp" in data:
-                                continue
-                            
-                            #parse the time and convert it to excel time
-                            currTime = self.parseTime(data["timestamp"])
-                            currTime = self.timeConverter(currTime)
 
-                            #set the csv to use excel time instead of timestamps
-                            data["timestamp"] = currTime
-                            name = data.get("name", "").lower()
+                            #for each topic, check if this message has the desired key and value
+                            for topic in topics:
+                                for filterVal in topic.get("filter", []):
+                                    key = filterVal.get("key")
+                                    value = filterVal.get("value")
 
-                            #if all data include message, if critical load only include th message when the name matches the load,
-                            #if substation only include name if the substation name is in the data name
-                            include = (
-                                (mode == "all data") or
-                                (mode == "critical load" and name == critLoad) or
-                                (mode == "substation" and substation in name)
-                            )
+                                    if key in data:
+                                        if str(data.get(key)).lower() == str(value).lower():
+                                            all_keys.update(data.keys())
 
-                            if include:
-                                all_keys.update(data.keys())
+                                            if writer is None:
+                                                writer = csv.DictWriter(file, fieldnames=sorted(all_keys), extrasaction='ignore')
+                                                
+                                                #check if the first line in the csv has been written yet, write it if not
+                                                if not wrote_header:
+                                                    writer.writeheader()
+                                                    wrote_header = True
+                                            
+                                            #write the data and flush the data to ensure that we don't save to buffer
+                                            writer.writerow(data)
+                                            file.flush()
 
-                                if writer is None:
-                                    writer = csv.DictWriter(file, fieldnames=sorted(all_keys), extrasaction='ignore')
-                                    
-                                    #check if the first line in the csv has been written yet, write it if not
-                                    if not wrote_header:
-                                        writer.writeheader()
-                                        wrote_header = True
-                                
-                                #write the data and flush the data to ensure that we don't save to buffer
-                                writer.writerow(data)
-                                file.flush()
             else: #if not CSV, output JSON
                 with open(os.path.join(output_dir, 'out.txt'), mode='a', encoding='utf-8') as file:
                     while run_loop:
                         for message in consumer:
+                            #grab unfiltered/ unprocessed message data
                             data = message.value
-                            if not isinstance(data, dict) and "timestamp" in data:
-                                continue
-                            
-                            #parse the time and convert it to excel time
-                            currTime = self.parseTime(data["timestamp"])
-                            currTime = self.timeConverter(currTime)
 
-                            #set the json file to use excel time instead of timestamps
-                            data["timestamp"] = currTime
-                            name = data.get("name", "").lower()
+                            #for each topic, check if this message has the desired key and value
+                            for topic in topics:
+                                for filterVal in topic.get("filter", []):
+                                    key = filterVal.get("key", "")
+                                    value = filterVal.get("value", "")
 
-                            include = (
-                                (mode == "all data") or
-                                (mode == "critical load" and name == critLoad) or
-                                (mode == "substation" and substation in name)
-                            )
-
-                            if include:
-                                file.write(json.dumps(data) + "\n")
-                                file.flush()
+                                    if str(data.get(key, "")).lower() == value.lower():
+                                        #write the data and flush the data to ensure that we don't save to buffer
+                                        file.write(json.dumps(data) + "\n")
+                                        file.flush()
 
         except Exception as e:
             logger.log('INFO', f'FAILED: {e}')
