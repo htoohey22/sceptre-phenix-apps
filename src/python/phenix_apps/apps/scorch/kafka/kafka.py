@@ -128,7 +128,6 @@ class kafka(ComponentBase):
 
         except Exception as e:
             logger.log('INFO', f'FAILED: {e}')
-            run_loop = False
         finally:
             consumer.close()
             run_loop = False
