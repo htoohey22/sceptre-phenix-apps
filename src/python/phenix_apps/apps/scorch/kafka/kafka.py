@@ -85,7 +85,7 @@ class kafka(ComponentBase):
                                                 if not wrote_header:
                                                     writer.writeheader()
                                                     wrote_header = True
-                                            
+
                                             #write the data and flush the data to ensure that we don't save to buffer
                                             writer.writerow(data)
                                             file.flush()
@@ -100,13 +100,16 @@ class kafka(ComponentBase):
                             #for each topic, check if this message has the desired key and value
                             for topic in topics:
                                 for filterVal in topic.get("filter", []):
-                                    key = filterVal.get("key", "")
-                                    value = filterVal.get("value", "")
+                                    key = filterVal.get("key")
+                                    logger.log('INFO', f'search key: {key}')
+                                    value = filterVal.get("value")
+                                    logger.log('INFO', f'search value: {value}')
 
-                                    if str(data.get(key, "")).lower() == value.lower():
-                                        #write the data and flush the data to ensure that we don't save to buffer
-                                        file.write(json.dumps(data) + "\n")
-                                        file.flush()
+                                    if key in data:
+                                        if str(data.get(key)).lower() == str(value).lower():
+                                            #write the data and flush the data to ensure that we don't save to buffer
+                                            file.write(json.dumps(data) + "\n")
+                                            file.flush()
 
         except Exception as e:
             logger.log('INFO', f'FAILED: {e}')
