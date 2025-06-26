@@ -45,10 +45,10 @@ class kafka(ComponentBase):
 
                 #handle wildcards in the name
                 if '*' in name:
-                    filteredName = name.split('*')[0]
+                    foundTopics = False
+                    filteredName = name.split('*')[0] #we don't care about anything right of the wildcard
                     pattern = f'^{re.escape(filteredName)}.*'
-                    logger.log('INFO', f'FILTERED NAME: {filteredName}')
-                    while foundTopics == False:
+                    while foundTopics == False: #if this is a new experiment, kafka may not have populated any tags... so wait until it has
                         for topic in consumer.topics():
                             if str(filteredName) in str(topic):
                                 logger.log('INFO', f'TOPIC: {topic}')
@@ -56,7 +56,7 @@ class kafka(ComponentBase):
                         if subscribedTopics:
                             foundTopics = True
                         else:
-                            time.sleep(5)
+                            time.sleep(5) #we don't need to be constantly scaning for data, so sleep for a few seconds imbetween attempts
                 elif name:
                     subscribedTopics.append(name)
 
