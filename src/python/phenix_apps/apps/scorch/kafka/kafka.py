@@ -86,9 +86,12 @@ class kafka(ComponentBase):
                                                     writer.writeheader()
                                                     wrote_header = True
 
-                                            #write the data and flush the data to ensure that we don't save to buffer
-                                            writer.writerow(data)
-                                            file.flush()
+                                            storeMessage = True
+
+                            if storeMessage:
+                                #write the data and flush the data to ensure that we don't save to buffer
+                                writer.writerow(data)
+                                file.flush()
 
             else: #if not CSV, output JSON
                 with open(os.path.join(output_dir, 'out.txt'), mode='a', encoding='utf-8') as file:
@@ -96,6 +99,8 @@ class kafka(ComponentBase):
                         for message in consumer:
                             #grab unfiltered/ unprocessed message data
                             data = message.value
+
+                            storeMessage = False
 
                             #for each topic, check if this message has the desired key and value
                             for topic in topics:
@@ -107,9 +112,12 @@ class kafka(ComponentBase):
 
                                     if key in data:
                                         if str(data.get(key)).lower() == str(value).lower():
-                                            #write the data and flush the data to ensure that we don't save to buffer
-                                            file.write(json.dumps(data) + "\n")
-                                            file.flush()
+                                            storeMessage = True
+                            
+                            if storeMessage:
+                                #write the data and flush the data to ensure that we don't save to buffer
+                                file.write(json.dumps(data) + "\n")
+                                file.flush()
 
         except Exception as e:
             logger.log('INFO', f'FAILED: {e}')
