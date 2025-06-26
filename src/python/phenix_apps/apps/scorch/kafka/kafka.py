@@ -14,6 +14,7 @@ class kafka(ComponentBase):
         self.execute_stage()
 
     def start(self):
+        global run_loop
         run_loop = True
         logger.log('INFO', f'Starting user component: {self.name}')
 
@@ -123,6 +124,7 @@ class kafka(ComponentBase):
         logger.log('INFO', f'Configured user component: {self.name}')
 
     def stop(self):
+        global run_loop
         run_loop = False
         logger.log('INFO', f'Stopping user component: {self.name}')
 
