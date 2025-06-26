@@ -14,7 +14,6 @@ class kafka(ComponentBase):
         self.execute_stage()
 
     def start(self):
-        global run_loop
         run_loop = True
         logger.log('INFO', f'Starting user component: {self.name}')
 
@@ -135,13 +134,11 @@ class kafka(ComponentBase):
 
     def stop(self):
         logger.log('INFO', f'Stopping user component: {self.name}')
-        global run_loop
         run_loop = False
 
     def cleanup(self):
         #no cleanup, currently it just makes and populates the one csv/json file
         logger.log('INFO', f'Cleaning up user component: {self.name}')
-        global run_loop
         run_loop = False
 
 def main():
