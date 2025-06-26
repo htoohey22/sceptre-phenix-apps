@@ -103,7 +103,6 @@ class kafka(ComponentBase):
             else: #if not CSV, output JSON
                 with open(os.path.join(output_dir, 'out.txt'), mode='a', encoding='utf-8') as file:
                     while run_loop:
-                        logger.log('INFO', f'into JSON')
                         for message in consumer:
                             logger.log('INFO', f'into message loop')
                             #grab unfiltered/ unprocessed message data
@@ -142,6 +141,8 @@ class kafka(ComponentBase):
     def cleanup(self):
         #no cleanup, currently it just makes and populates the one csv/json file
         logger.log('INFO', f'Cleaning up user component: {self.name}')
+        global run_loop
+        run_loop = False
 
 def main():
     kafka()
