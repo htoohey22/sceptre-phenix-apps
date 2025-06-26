@@ -112,7 +112,6 @@ class kafka(ComponentBase):
                 with open(os.path.join(output_dir, 'out.txt'), mode='a', encoding='utf-8') as file:
                     while run_loop:
                         for message in consumer:
-                            logger.log('INFO', f'into message loop')
                             #grab unfiltered/ unprocessed message data
                             data = message.value
 
@@ -120,7 +119,6 @@ class kafka(ComponentBase):
 
                             #for each topic, check if this message has the desired key and value
                             for topic in topics:
-                                logger.log('INFO', f'into topic loop')
                                 for filterVal in topic.get("filter", []):
                                     key = filterVal.get("key")
                                     value = filterVal.get("value")
