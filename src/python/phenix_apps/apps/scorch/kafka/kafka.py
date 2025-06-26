@@ -41,12 +41,14 @@ class kafka(ComponentBase):
         else:
             for topic in topics:
                 name =  topic.get("name")
-                
+
                 #handle wildcards in the name
                 if '*' in name:
                     filteredName = name.split('*')[0]
                     pattern = f'^{re.escape(filteredName)}.*'
-                    subscribedTopics.append(pattern=pattern)
+                    for topic in consumer.topics():
+                        if str(filteredName) in str(topic):
+                            subscribedTopics.append(topic)
                 elif name:
                     subscribedTopics.append(name)
 
