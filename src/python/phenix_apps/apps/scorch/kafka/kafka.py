@@ -128,10 +128,10 @@ class kafka(ComponentBase):
 
         except Exception as e:
             logger.log('INFO', f'FAILED: {e}')
+            run_loop = False
         finally:
             consumer.close()
-
-        logger.log('INFO', f'Configured user component: {self.name}')
+            run_loop = False
 
     def stop(self):
         logger.log('INFO', f'Stopping user component: {self.name}')
