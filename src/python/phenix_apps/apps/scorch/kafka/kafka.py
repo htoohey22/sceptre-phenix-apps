@@ -41,7 +41,12 @@ class kafka(ComponentBase):
         else:
             for topic in topics:
                 name =  topic.get("name")
-                if name:
+
+                #handle wildcards in the name
+                if '*' in name:
+                    filteredName = name.split('*')
+                    subscribedTopics.append(filteredName[0])
+                elif name:
                     subscribedTopics.append(name)
 
         logger.log('INFO', f'Subscribed Topics: {subscribedTopics}')
