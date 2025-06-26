@@ -1,4 +1,4 @@
-import json, itertools, threading, time, sys, csv, re, osAdd commentMore actions
+import json, itertools, threading, time, sys, csv, re, os
 
 from phenix_apps.apps.scorch import ComponentBase
 from phenix_apps.common import logger, utils
@@ -54,6 +54,7 @@ class kafka(ComponentBase):
         logger.log('INFO', f'substation: {substation}')
         logger.log('INFO', f'csvOut: {csvOut}')
         '''
+
 
         #kafka consumer
         consumer = KafkaConsumer(
