@@ -70,9 +70,7 @@ class kafka(ComponentBase):
                             for topic in topics:
                                 for filterVal in topic.get("filter", []):
                                     key = filterVal.get("key")
-                                    logger.log('INFO', f'search key: {key}')
                                     value = filterVal.get("value")
-                                    logger.log('INFO', f'search value: {value}')
 
                                     if key in data:
                                         if str(data.get(key)).lower() == str(value).lower():
@@ -106,9 +104,7 @@ class kafka(ComponentBase):
                             for topic in topics:
                                 for filterVal in topic.get("filter", []):
                                     key = filterVal.get("key")
-                                    logger.log('INFO', f'search key: {key}')
                                     value = filterVal.get("value")
-                                    logger.log('INFO', f'search value: {value}')
 
                                     if key in data:
                                         if str(data.get(key)).lower() == str(value).lower():
