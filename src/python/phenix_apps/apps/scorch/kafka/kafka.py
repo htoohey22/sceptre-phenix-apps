@@ -86,7 +86,7 @@ class kafka(ComponentBase):
                             value = filterVal.get("value")
 
                             if key in data:
-                                if str(value).lower() == str(data.get(key)).lower():
+                                if str(data.get(key)).lower() == str(value).lower():
                                     if csvBool:
                                         all_keys.update(data.keys())
 
@@ -122,6 +122,7 @@ class kafka(ComponentBase):
         except Exception as e:
             logger.log('INFO', f'FAILED: {e}')
         finally:
+            logger.log('INFO', f'CLOSING: {e}')
             consumer.close()
             scorch_kafka_running = False
 
