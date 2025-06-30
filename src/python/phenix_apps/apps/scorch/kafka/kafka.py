@@ -86,7 +86,7 @@ class kafka(ComponentBase):
                             value = filterVal.get("value")
 
                             if key in data:
-                                if str(value).lower() in str(data.get(key)).lower():
+                                if str(value).lower() == str(data.get(key)).lower():
                                     if csvBool:
                                         all_keys.update(data.keys())
 
