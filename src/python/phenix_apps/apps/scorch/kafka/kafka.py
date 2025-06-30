@@ -43,7 +43,7 @@ class kafka(ComponentBase):
         for topic in topics:
             name =  topic.get("name")
 
-            #handle wildcards in the name
+            #handle wildcards in the name, this only supports right wildcards
             if '*' in name:
                 foundTopics = False
                 filteredName = name.split('*')[0] #we don't care about anything right of the wildcard
@@ -83,10 +83,19 @@ class kafka(ComponentBase):
                     for topic in topics:
                         for filterVal in topic.get("filter", []):
                             key = filterVal.get("key")
+
+                            wildcardKey = False
+
+                            #this only supports right wildcards
+                            if '*' in key:
+                                wildcardKey = True
+                                key = key.split('*')[0]
+
                             value = filterVal.get("value")
 
                             if key in data:
-                                if str(value).lower() in str(data.get(key)).lower():
+
+                                if str(value).lower() == str(data.get(key)).lower() or (wildcardKey and str(value).lower() in str(data.get(key)).lower()):
                                     if csvBool:
                                         all_keys.update(data.keys())
 
