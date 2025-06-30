@@ -89,8 +89,11 @@ class kafka(ComponentBase):
 
                             #this only supports right wildcards
                             if '*' in value:
-                                wildcardKey = True
-                                value = value.split('*')[0]
+                                wildcardValue = True
+                                if value[0] == '*':
+                                    value = value.split('*')[1]
+                                else:
+                                    value = value.split('*')[0]
 
                             if key in data:
                                 if str(value).lower() == str(data.get(key)).lower() or (wildcardValue and str(value).lower() in str(data.get(key)).lower()):
