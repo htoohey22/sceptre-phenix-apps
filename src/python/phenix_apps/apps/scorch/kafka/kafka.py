@@ -52,7 +52,6 @@ class kafka(ComponentBase):
                 while foundTopics == False: #if this is a new experiment, kafka may not have populated any tags... so wait until it has
                     for topic in consumer.topics():
                         if str(filteredName) in str(topic):
-                            logger.log('INFO', f'TOPIC: {topic}')
                             subscribedTopics.append(topic)
                     if subscribedTopics:
                         foundTopics = True
@@ -73,65 +72,52 @@ class kafka(ComponentBase):
         all_keys = set()
         wrote_header = False
 
+        def helper(csvBool):
+        while scorch_kafka_running:
+            for message in consumer:
+
+                #grab unfiltered/ unprocessed message data
+                data = message.value
+
+                #for each topic, check if this message has the desired key and value
+                for topic in topics:
+                    for filterVal in topic.get("filter", []):
+                        key = filterVal.get("key")
+                        value = filterVal.get("value")
+
+                        if key in data:
+                            if str(data.get(key)).lower() == str(value).lower():
+                                if csvBool:
+                                    all_keys.update(data.keys())
+
+                                    if writer is None:
+                                        writer = csv.DictWriter(file, fieldnames=sorted(all_keys), extrasaction='ignore')
+                                        
+                                        #check if the first line in the csv has been written yet, write it if not
+                                        if not wrote_header:
+                                            writer.writeheader()
+                                            wrote_header = True
+
+                                storeMessage = True
+
+                if storeMessage:
+                    #write the data and flush the data to ensure that we don't save to buffer
+                    if csvBool:
+                        writer.writerow(data)
+                    else:
+                        file.write(json.dumps(data) + "\n")
+                    file.flush()
+
         try:
             #run the consumer, try to find all messages with the relevant tags
             if csvBool:
                 with open(os.path.join(output_dir, 'out.csv'), mode="a", newline="", encoding="utf-8") as file:
-                    writer = None
-                    while scorch_kafka_running:
-                        for message in consumer:
-
-                            #grab unfiltered/ unprocessed message data
-                            data = message.value
-
-                            #for each topic, check if this message has the desired key and value
-                            for topic in topics:
-                                for filterVal in topic.get("filter", []):
-                                    key = filterVal.get("key")
-                                    value = filterVal.get("value")
-
-                                    if key in data:
-                                        if str(data.get(key)).lower() == str(value).lower():
-                                            all_keys.update(data.keys())
-
-                                            if writer is None:
-                                                writer = csv.DictWriter(file, fieldnames=sorted(all_keys), extrasaction='ignore')
-                                                
-                                                #check if the first line in the csv has been written yet, write it if not
-                                                if not wrote_header:
-                                                    writer.writeheader()
-                                                    wrote_header = True
-
-                                            storeMessage = True
-
-                            if storeMessage:
-                                #write the data and flush the data to ensure that we don't save to buffer
-                                writer.writerow(data)
-                                file.flush()
-
-            else: #if not CSV, output JSON
+                    if csvBool:
+                        writer = None
+                    helper(csvBool)
+            else:
                 with open(os.path.join(output_dir, 'out.txt'), mode='a', encoding='utf-8') as file:
-                    while scorch_kafka_running:
-                        for message in consumer:
-                            #grab unfiltered/ unprocessed message data
-                            data = message.value
-
-                            storeMessage = False
-
-                            #for each topic, check if this message has the desired key and value
-                            for topic in topics:
-                                for filterVal in topic.get("filter", []):
-                                    key = filterVal.get("key")
-                                    value = filterVal.get("value")
-
-                                    if key in data:
-                                        if str(data.get(key)).lower() == str(value).lower():
-                                            storeMessage = True
-                            
-                            if storeMessage:
-                                #write the data and flush the data to ensure that we don't save to buffer
-                                file.write(json.dumps(data) + "\n")
-                                file.flush()
+                    helper(csvBool)
 
         except Exception as e:
             logger.log('INFO', f'FAILED: {e}')
