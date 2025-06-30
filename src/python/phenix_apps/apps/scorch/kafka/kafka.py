@@ -6,7 +6,7 @@ from kafka import KafkaConsumer
 from kafka.errors import KafkaError
 from datetime import datetime
 
-run_loop = False
+scorch_kafka_running = False
 
 class kafka(ComponentBase):
     def __init__(self):
@@ -14,19 +14,19 @@ class kafka(ComponentBase):
         self.execute_stage()
 
     def start(self):
-        global run_loop
-        run_loop = True
+        global scorch_kafka_running
+        scorch_kafka_running = True
         logger.log('INFO', f'Starting user component: {self.name}')
 
         #get all variables from tags
-        bootstrapServers = self.metadata.get("bootstrapServers", ["172.20.0.63:9092"])
+        kafka_ips = self.metadata.get("kafka_ips", ["172.20.0.63:9092"])
         topics = self.metadata.get("topics", None)
         csvBool = self.metadata.get("csv", True) #if false output a JSON
 
         #kafka consumer
         consumer = KafkaConsumer(
             #bootstrap ip and port could probably be separate variables in the future
-            bootstrap_servers = bootstrapServers,
+            bootstrap_servers = kafka_ips,
             auto_offset_reset='latest',
             enable_auto_commit=False,
             value_deserializer=lambda m: json.loads(m.decode('utf-8'))
@@ -77,7 +77,7 @@ class kafka(ComponentBase):
             if csvBool:
                 with open(os.path.join(output_dir, 'out.csv'), mode="a", newline="", encoding="utf-8") as file:
                     writer = None
-                    while run_loop:
+                    while scorch_kafka_running:
                         for message in consumer:
 
                             #grab unfiltered/ unprocessed message data
@@ -110,7 +110,7 @@ class kafka(ComponentBase):
 
             else: #if not CSV, output JSON
                 with open(os.path.join(output_dir, 'out.txt'), mode='a', encoding='utf-8') as file:
-                    while run_loop:
+                    while scorch_kafka_running:
                         for message in consumer:
                             #grab unfiltered/ unprocessed message data
                             data = message.value
@@ -136,18 +136,18 @@ class kafka(ComponentBase):
             logger.log('INFO', f'FAILED: {e}')
         finally:
             consumer.close()
-            run_loop = False
+            scorch_kafka_running = False
 
     def stop(self):
         logger.log('INFO', f'Stopping user component: {self.name}')
-        global run_loop
-        run_loop = False
+        global scorch_kafka_running
+        scorch_kafka_running = False
 
     def cleanup(self):
         #no cleanup, currently it just makes and populates the one csv/json file
         logger.log('INFO', f'Cleaning up user component: {self.name}')
-        global run_loop
-        run_loop = False
+        global scorch_kafka_running
+        scorch_kafka_running = False
 
 def main():
     kafka()
