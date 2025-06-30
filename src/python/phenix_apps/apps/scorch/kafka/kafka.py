@@ -82,26 +82,25 @@ class kafka(ComponentBase):
                     #for each topic, check if this message has the desired key and value
                     for topic in topics:
                         for filterVal in topic.get("filter", []):
-                            if filterVal.get("key"):
-                                key = filterVal.get("key")
-                                value = filterVal.get("value")
+                            key = filterVal.get("key")
+                            value = filterVal.get("value")
 
-                                if key in data:
-                                    if str(value).lower() in str(data.get(key)).lower():
-                                        if csvBool:
-                                            all_keys.update(data.keys())
+                            if key in data:
+                                if str(value).lower() in str(data.get(key)).lower():
+                                    if csvBool:
+                                        all_keys.update(data.keys())
 
-                                            if writer is None:
-                                                writer = csv.DictWriter(file, fieldnames=sorted(all_keys), extrasaction='ignore')
-                                                
-                                                #check if the first line in the csv has been written yet, write it if not
-                                                if not wrote_header:
-                                                    writer.writeheader()
-                                                    wrote_header = True
+                                        if writer is None:
+                                            writer = csv.DictWriter(file, fieldnames=sorted(all_keys), extrasaction='ignore')
+                                            
+                                            #check if the first line in the csv has been written yet, write it if not
+                                            if not wrote_header:
+                                                writer.writeheader()
+                                                wrote_header = True
 
-                                        storeMessage = True
+                                    storeMessage = True
 
-                    if storeMessage or not filterVal.get("key"):
+                    if storeMessage:
                         #write the data and flush the data to ensure that we don't save to buffer
                         if csvBool:
                             writer.writerow(data)
