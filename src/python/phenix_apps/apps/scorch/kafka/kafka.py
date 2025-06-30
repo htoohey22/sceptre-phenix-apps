@@ -75,6 +75,7 @@ class kafka(ComponentBase):
         def helper(csvBool):
             while scorch_kafka_running:
                 for message in consumer:
+                    storeMessage = False
 
                     #grab unfiltered/ unprocessed message data
                     data = message.value
