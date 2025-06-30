@@ -87,16 +87,15 @@ class kafka(ComponentBase):
 
                             wildcardValue = False
 
-                            #this only supports right wildcards
-                            if '*' in value:
-                                wildcardValue = True
-                                if value[0] == '*':
-                                    value = value.split('*')[1]
-                                else:
-                                    value = value.split('*')[0]
-
                             if key in data:
-                                if str(value).lower() == str(data.get(key)).lower() or (wildcardValue and str(value).lower() in str(data.get(key)).lower()):
+                                actualValue = str(data.get(key)).lower()
+                                pattern = str(value).lower()
+
+                                pattern = re.escape(pattern).replace(r'\*', '.*')
+
+                                regex = re.compile(f"^{pattern}$", re.IGNORECASE)
+                                #if str(value).lower() == str(data.get(key)).lower() or (wildcardValue and str(value).lower() in str(data.get(key)).lower()):
+                                if regex.match(actual_value):
                                     if csvBool:
                                         all_keys.update(data.keys())
 
