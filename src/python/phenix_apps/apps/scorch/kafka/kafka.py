@@ -73,40 +73,40 @@ class kafka(ComponentBase):
         wrote_header = False
 
         def helper(csvBool):
-        while scorch_kafka_running:
-            for message in consumer:
+            while scorch_kafka_running:
+                for message in consumer:
 
-                #grab unfiltered/ unprocessed message data
-                data = message.value
+                    #grab unfiltered/ unprocessed message data
+                    data = message.value
 
-                #for each topic, check if this message has the desired key and value
-                for topic in topics:
-                    for filterVal in topic.get("filter", []):
-                        key = filterVal.get("key")
-                        value = filterVal.get("value")
+                    #for each topic, check if this message has the desired key and value
+                    for topic in topics:
+                        for filterVal in topic.get("filter", []):
+                            key = filterVal.get("key")
+                            value = filterVal.get("value")
 
-                        if key in data:
-                            if str(data.get(key)).lower() == str(value).lower():
-                                if csvBool:
-                                    all_keys.update(data.keys())
+                            if key in data:
+                                if str(data.get(key)).lower() == str(value).lower():
+                                    if csvBool:
+                                        all_keys.update(data.keys())
 
-                                    if writer is None:
-                                        writer = csv.DictWriter(file, fieldnames=sorted(all_keys), extrasaction='ignore')
-                                        
-                                        #check if the first line in the csv has been written yet, write it if not
-                                        if not wrote_header:
-                                            writer.writeheader()
-                                            wrote_header = True
+                                        if writer is None:
+                                            writer = csv.DictWriter(file, fieldnames=sorted(all_keys), extrasaction='ignore')
+                                            
+                                            #check if the first line in the csv has been written yet, write it if not
+                                            if not wrote_header:
+                                                writer.writeheader()
+                                                wrote_header = True
 
-                                storeMessage = True
+                                    storeMessage = True
 
-                if storeMessage:
-                    #write the data and flush the data to ensure that we don't save to buffer
-                    if csvBool:
-                        writer.writerow(data)
-                    else:
-                        file.write(json.dumps(data) + "\n")
-                    file.flush()
+                    if storeMessage:
+                        #write the data and flush the data to ensure that we don't save to buffer
+                        if csvBool:
+                            writer.writerow(data)
+                        else:
+                            file.write(json.dumps(data) + "\n")
+                        file.flush()
 
         try:
             #run the consumer, try to find all messages with the relevant tags
