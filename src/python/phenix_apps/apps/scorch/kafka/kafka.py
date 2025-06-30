@@ -138,6 +138,7 @@ class kafka(ComponentBase):
         finally:
             consumer.close()
             scorch_kafka_running = False
+            f.close()
 
     def stop(self):
         logger.log('INFO', f'Stopping user component: {self.name}')
