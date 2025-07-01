@@ -23,46 +23,6 @@ class kafka(ComponentBase):
         topics = self.metadata.get("topics", None)
         csvBool = self.metadata.get("csv", True) #if false output a JSON
 
-        #kafka consumer
-        consumer = KafkaConsumer(
-            #bootstrap ip and port could probably be separate variables in the future
-            bootstrap_servers = kafka_ips,
-            auto_offset_reset='latest',
-            enable_auto_commit=False,
-            value_deserializer=lambda m: json.loads(m.decode('utf-8'))
-        )
-
-        #list of all topic names we want the consumer to subscribe to
-        subscribedTopics = []
-        foundTopics = False
-
-        #get all topic names
-        if not topics:
-            logger.log('INFO', f'No topics subscribed to')
-        
-        for topic in topics:
-            name =  topic.get("name")
-
-            #handle wildcards in the name, this only supports right wildcards
-            if '*' in name:
-                foundTopics = False
-                filteredName = name.split('*')[0] #we don't care about anything right of the wildcard
-                pattern = f'^{re.escape(filteredName)}.*'
-                while foundTopics == False: #if this is a new experiment, kafka may not have populated any tags... so wait until it has
-                    for topic in consumer.topics():
-                        if str(filteredName) in str(topic):
-                            subscribedTopics.append(topic)
-                    if subscribedTopics:
-                        foundTopics = True
-                    else:
-                        time.sleep(5) #we don't need to be constantly scaning for data, so sleep for a few seconds imbetween attempts
-            elif name:
-                subscribedTopics.append(name)
-
-        logger.log('INFO', f'Subscribed Topics: {subscribedTopics}')
-        #subscribe to all topic names
-        consumer.subscribe(subscribedTopics)
-
         #get and output the output directory to the logger
         output_dir = self.base_dir
         logger.log('INFO', f'Output Directory: {output_dir}')
@@ -71,8 +31,49 @@ class kafka(ComponentBase):
         all_keys = set()
         wrote_header = False
 
-        def helper(csvBool, path):
+        def helper(csvBool, path, kafka_ips, subscribedTopics, topics):
             try:
+
+                #kafka consumer
+                consumer = KafkaConsumer(
+                    #bootstrap ip and port could probably be separate variables in the future
+                    bootstrap_servers = kafka_ips,
+                    auto_offset_reset='latest',
+                    enable_auto_commit=False,
+                    value_deserializer=lambda m: json.loads(m.decode('utf-8'))
+                )
+
+                #list of all topic names we want the consumer to subscribe to
+                subscribedTopics = []
+                foundTopics = False
+
+                #get all topic names
+                if not topics:
+                    logger.log('INFO', f'No topics subscribed to')
+                
+                for topic in topics:
+                    name =  topic.get("name")
+
+                    #handle wildcards in the name, this only supports right wildcards
+                    if '*' in name:
+                        foundTopics = False
+                        filteredName = name.split('*')[0] #we don't care about anything right of the wildcard
+                        pattern = f'^{re.escape(filteredName)}.*'
+                        while foundTopics == False: #if this is a new experiment, kafka may not have populated any tags... so wait until it has
+                            for topic in consumer.topics():
+                                if str(filteredName) in str(topic):
+                                    subscribedTopics.append(topic)
+                            if subscribedTopics:
+                                foundTopics = True
+                            else:
+                                time.sleep(5) #we don't need to be constantly scaning for data, so sleep for a few seconds imbetween attempts
+                    elif name:
+                        subscribedTopics.append(name)
+
+                logger.log('INFO', f'Subscribed Topics: {subscribedTopics}')
+                #subscribe to all topic names
+                consumer.subscribe(subscribedTopics)
+
                 with open(path, 'a', newline='', encoding='utf-8') as file:
                     writer = None
                     wrote_header = False
@@ -126,8 +127,6 @@ class kafka(ComponentBase):
                 logger.log('INFO', f'THREAD FAILED: {e}')
             finally:
                 logger.log('INFO', 'EXITING THREAD.')
-                #consumer.close()
-                #scorch_kafka_running = False
 
         try:
             #run the consumer, try to find all messages with the relevant tags
@@ -136,8 +135,8 @@ class kafka(ComponentBase):
             else:
                 path = os.path.join(output_dir, 'out.txt')
             
-            t1 = threading.Thread(target=helper, args=(csvBool,path))
-            t1.start()
+            self.t1 = threading.Thread(target=helper, args=(csvBool, path, kafka_ips, subscribedTopics, topics))
+            self.t1.start()
         except Exception as e:
             logger.log('INFO', f'FAILED: {e}')
         finally:
@@ -147,14 +146,14 @@ class kafka(ComponentBase):
         logger.log('INFO', f'Stopping user component: {self.name}')
         global scorch_kafka_running
         scorch_kafka_running = False
-        t1.join()
+        self.t1.join()
 
     def cleanup(self):
         #no cleanup, currently it just makes and populates the one csv/json file
         logger.log('INFO', f'Cleaning up user component: {self.name}')
         global scorch_kafka_running
         scorch_kafka_running = False
-        t1.join()
+        self.t1.join()
 
 def main():
     kafka()
