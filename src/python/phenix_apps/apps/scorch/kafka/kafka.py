@@ -5,8 +5,10 @@ from phenix_apps.common import logger, utils
 from kafka import KafkaConsumer
 from kafka.errors import KafkaError
 from datetime import datetime
+from queue import Queue
 
 scorch_kafka_running = False
+self.messageBuffer = Queue()
 
 class kafka(ComponentBase):
     def __init__(self):
@@ -116,12 +118,16 @@ class kafka(ComponentBase):
                                             storeMessage = True
 
                             if storeMessage:
+                                logger.log('INFO', f'MESSAGE: {data}')
                                 #write the data and flush the data to ensure that we don't save to buffer
+                                self.message_buffer.put(data)
+                                '''
                                 if csvBool:
                                     writer.writerow(data)
                                 else:
                                     file.write(json.dumps(data) + "\n")
                                 file.flush()
+                                '''
                     consumer.close()
             except Exception as e:
                 logger.log('INFO', f'THREAD FAILED: {e}')
@@ -135,7 +141,7 @@ class kafka(ComponentBase):
             else:
                 path = os.path.join(output_dir, 'out.txt')
             
-            self.t1 = threading.Thread(target=helper, args=(csvBool, path, kafka_ips, topics))
+            self.t1 = threading.Thread(target=helper, args=(csvBool, path, kafka_ips, topics), daemon=True)
             self.t1.start()
 
             #this sleep is required to ensure that the out file is actually created BEFORE moving onto the next component
@@ -147,6 +153,11 @@ class kafka(ComponentBase):
 
     def stop(self):
         logger.log('INFO', f'Stopping user component: {self.name}')
+        with open(path, 'a', encoding='utf-8') as file:
+            while not self.message_buffer.empty():
+                msg = self.message_buffer.get()
+                file.write(json.dumps(msg) + "\n")
+            file.flush()
         global scorch_kafka_running
         scorch_kafka_running = False
         self.t1.join()
