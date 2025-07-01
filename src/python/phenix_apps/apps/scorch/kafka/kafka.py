@@ -137,11 +137,11 @@ class kafka(ComponentBase):
         try:
             #run the consumer, try to find all messages with the relevant tags
             if csvBool:
-                path = os.path.join(output_dir, 'out.csv')
+                self.path = os.path.join(output_dir, 'out.csv')
             else:
-                path = os.path.join(output_dir, 'out.txt')
+                self.path = os.path.join(output_dir, 'out.txt')
             
-            self.t1 = threading.Thread(target=helper, args=(csvBool, path, kafka_ips, topics), daemon=True)
+            self.t1 = threading.Thread(target=helper, args=(csvBool, self.path, kafka_ips, topics), daemon=True)
             self.t1.start()
 
             #this sleep is required to ensure that the out file is actually created BEFORE moving onto the next component
@@ -153,7 +153,7 @@ class kafka(ComponentBase):
 
     def stop(self):
         logger.log('INFO', f'Stopping user component: {self.name}')
-        with open(path, 'a', encoding='utf-8') as file:
+        with open(self.path, 'a', encoding='utf-8') as file:
             while not self.message_buffer.empty():
                 msg = self.message_buffer.get()
                 file.write(json.dumps(msg) + "\n")
