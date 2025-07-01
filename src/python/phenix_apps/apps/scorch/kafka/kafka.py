@@ -123,14 +123,14 @@ class kafka(ComponentBase):
                 with open(os.path.join(output_dir, 'out.csv'), mode="a", newline="", encoding="utf-8") as file:
                     if csvBool:
                         writer = None
-                    t1 = threading.Thread(helper, csvBool)
-                    t1.start()
-                    #helper(csvBool)
+                    #t1 = threading.Thread(helper, csvBool)
+                    #t1.start()
+                    helper(csvBool)
             else:
                 with open(os.path.join(output_dir, 'out.txt'), mode='a', encoding='utf-8') as file:
-                    t1 = threading.Thread(helper, csvBool)
-                    t1.start()
-                    #helper(csvBool)
+                    #t1 = threading.Thread(helper, csvBool)
+                    #t1.start()
+                    helper(csvBool)
 
         except Exception as e:
             logger.log('INFO', f'FAILED: {e}')
@@ -150,7 +150,7 @@ class kafka(ComponentBase):
         logger.log('INFO', f'Cleaning up user component: {self.name}')
         global scorch_kafka_running
         scorch_kafka_running = False
-        t1.join()
+        #t1.join()
 
 def main():
     kafka()
