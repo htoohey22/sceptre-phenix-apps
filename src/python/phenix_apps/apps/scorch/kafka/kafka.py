@@ -16,7 +16,6 @@ class kafka(ComponentBase):
     
     def helper(self, csvBool, path, kafka_ips, topics):
         try:
-
             #kafka consumer
             consumer = KafkaConsumer(
                 #bootstrap ip and port could probably be separate variables in the future
@@ -111,6 +110,7 @@ class kafka(ComponentBase):
             logger.log('INFO', f'THREAD FAILED: {e}')
         finally:
             logger.log('INFO', 'EXITING THREAD.')
+            self.t1.join()
 
     def start(self):
         global scorch_kafka_running
@@ -137,7 +137,7 @@ class kafka(ComponentBase):
             else:
                 self.path = os.path.join(output_dir, 'out.txt')
             
-            self.t1 = threading.Thread(target=self.helper, args=(self, csvBool, self.path, kafka_ips, topics))
+            self.t1 = threading.Thread(target=self.helper, args=(csvBool, self.path, kafka_ips, topics))
             self.t1.start()
 
             #this sleep is required to ensure that the out file is actually created BEFORE moving onto the next component
