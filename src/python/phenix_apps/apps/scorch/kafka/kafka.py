@@ -123,10 +123,14 @@ class kafka(ComponentBase):
                 with open(os.path.join(output_dir, 'out.csv'), mode="a", newline="", encoding="utf-8") as file:
                     if csvBool:
                         writer = None
-                    helper(csvBool)
+                    t1 = threading.Thread(helper, csvBool)
+                    t1.start()
+                    #helper(csvBool)
             else:
                 with open(os.path.join(output_dir, 'out.txt'), mode='a', encoding='utf-8') as file:
-                    helper(csvBool)
+                    t1 = threading.Thread(helper, csvBool)
+                    t1.start()
+                    #helper(csvBool)
 
         except Exception as e:
             logger.log('INFO', f'FAILED: {e}')
@@ -139,12 +143,14 @@ class kafka(ComponentBase):
         logger.log('INFO', f'Stopping user component: {self.name}')
         global scorch_kafka_running
         scorch_kafka_running = False
+        t1.join()
 
     def cleanup(self):
         #no cleanup, currently it just makes and populates the one csv/json file
         logger.log('INFO', f'Cleaning up user component: {self.name}')
         global scorch_kafka_running
         scorch_kafka_running = False
+        t1.join()
 
 def main():
     kafka()
