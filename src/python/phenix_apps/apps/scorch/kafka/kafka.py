@@ -95,7 +95,7 @@ class kafka(ComponentBase):
 
                                 regex = re.compile(f"^{pattern}$", re.IGNORECASE)
                                 #if str(value).lower() == str(data.get(key)).lower() or (wildcardValue and str(value).lower() in str(data.get(key)).lower()):
-                                if regex.match(actual_value):
+                                if regex.match(actualValue):
                                     if csvBool:
                                         all_keys.update(data.keys())
 
