@@ -126,8 +126,8 @@ class kafka(ComponentBase):
                 logger.log('INFO', f'THREAD FAILED: {e}')
             finally:
                 logger.log('INFO', 'EXITING THREAD.')
-                consumer.close()
-                scorch_kafka_running = False
+                #consumer.close()
+                #scorch_kafka_running = False
 
         try:
             #run the consumer, try to find all messages with the relevant tags
@@ -145,16 +145,16 @@ class kafka(ComponentBase):
 
     def stop(self):
         logger.log('INFO', f'Stopping user component: {self.name}')
-        global scorch_kafka_running
-        scorch_kafka_running = False
-        t1.join()
+        #global scorch_kafka_running
+        #scorch_kafka_running = False
+        #t1.join()
 
     def cleanup(self):
         #no cleanup, currently it just makes and populates the one csv/json file
         logger.log('INFO', f'Cleaning up user component: {self.name}')
-        global scorch_kafka_running
-        scorch_kafka_running = False
-        t1.join()
+        #global scorch_kafka_running
+        #scorch_kafka_running = False
+        #t1.join()
 
 def main():
     kafka()
