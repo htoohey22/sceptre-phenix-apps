@@ -162,7 +162,7 @@ class kafka(ComponentBase):
             self.path = os.path.join(output_dir, 'out.txt')
 
         with open(self.path, 'w', encoding='utf-8') as file:
-            f.write('')
+            file.write('')
 
         self.t1 = threading.Thread(target=self.helper, args=(csvBool, self.path, kafka_ips, topics))
         self.t1.start()
