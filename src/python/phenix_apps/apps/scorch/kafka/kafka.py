@@ -123,12 +123,12 @@ class kafka(ComponentBase):
                 with open(os.path.join(output_dir, 'out.csv'), mode="a", newline="", encoding="utf-8") as file:
                     if csvBool:
                         writer = None
-                    t1 = threading.Thread(helper, csvBool)
+                    t1 = threading.Thread(target=helper, args=(csvBool,))
                     t1.start()
                     #helper(csvBool)
             else:
                 with open(os.path.join(output_dir, 'out.txt'), mode='a', encoding='utf-8') as file:
-                    t1 = threading.Thread(helper, csvBool)
+                    t1 = threading.Thread(target=helper, args=(csvBool,))
                     t1.start()
                     #helper(csvBool)
 
