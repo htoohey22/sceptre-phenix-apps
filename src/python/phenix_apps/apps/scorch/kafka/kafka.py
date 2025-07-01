@@ -35,7 +35,7 @@ class kafka(ComponentBase):
             try:
 
                 #kafka consumer
-                self.consumer = KafkaConsumer(
+                consumer = KafkaConsumer(
                     #bootstrap ip and port could probably be separate variables in the future
                     bootstrap_servers = kafka_ips,
                     auto_offset_reset='latest',
@@ -60,7 +60,7 @@ class kafka(ComponentBase):
                         filteredName = name.split('*')[0] #we don't care about anything right of the wildcard
                         pattern = f'^{re.escape(filteredName)}.*'
                         while foundTopics == False: #if this is a new experiment, kafka may not have populated any tags... so wait until it has
-                            for topic in self.consumer.topics():
+                            for topic in consumer.topics():
                                 if str(filteredName) in str(topic):
                                     subscribedTopics.append(topic)
                             if subscribedTopics:
@@ -72,7 +72,7 @@ class kafka(ComponentBase):
 
                 logger.log('INFO', f'Subscribed Topics: {subscribedTopics}')
                 #subscribe to all topic names
-                self.consumer.subscribe(subscribedTopics)
+                consumer.subscribe(subscribedTopics)
 
                 with open(path, 'a', newline='', encoding='utf-8') as file:
                     writer = None
@@ -81,7 +81,7 @@ class kafka(ComponentBase):
 
                     while scorch_kafka_running:
                         logger.log('INFO', f'In Main Loop')
-                        for message in self.consumer:
+                        for message in consumer:
                             storeMessage = False
 
                             #grab unfiltered/ unprocessed message data
@@ -124,6 +124,7 @@ class kafka(ComponentBase):
                                 else:
                                     file.write(json.dumps(data) + "\n")
                                 file.flush()
+                    consumer.close()
             except Exception as e:
                 logger.log('INFO', f'THREAD FAILED: {e}')
             finally:
@@ -145,7 +146,6 @@ class kafka(ComponentBase):
 
     def stop(self):
         logger.log('INFO', f'Stopping user component: {self.name}')
-        self.consumer.close()
         global scorch_kafka_running
         scorch_kafka_running = False
         self.t1.join()
