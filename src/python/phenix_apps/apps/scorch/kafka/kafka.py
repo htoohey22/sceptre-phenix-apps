@@ -70,7 +70,6 @@ class kafka(ComponentBase):
                     elif name:
                         subscribedTopics.append(name)
 
-                logger.log('INFO', f'Subscribed Topics: {subscribedTopics}')
                 #subscribe to all topic names
                 consumer.subscribe(subscribedTopics)
 
@@ -80,7 +79,6 @@ class kafka(ComponentBase):
                     all_keys = set()
 
                     while scorch_kafka_running:
-                        logger.log('INFO', f'In Main Loop')
                         for message in consumer:
                             storeMessage = False
 
