@@ -12,6 +12,10 @@ scorch_kafka_running = False
 class kafka(ComponentBase):
     def __init__(self):
         ComponentBase.__init__(self, 'kafka')
+        self.messageBuffer = Queue()
+        self.stopThread = threading.Event()
+        self.t1 = None
+        self.path = None
         self.execute_stage()
     
     def helper(self, csvBool, path, kafka_ips, topics):
@@ -55,6 +59,30 @@ class kafka(ComponentBase):
             #subscribe to all topic names
             consumer.subscribe(subscribedTopics)
 
+            while not self.stopThread.is_set():
+                for message in consumer:
+                    if self.stopThread.is_set():
+                        break
+                    
+                    data = message.value
+                    for topic in topics:
+                        for filterVal in topic.get("filter", []):
+                            key = filterVal.get("key")
+                            value = filterVal.get("value")
+                            wildcardValue = False
+
+                            if key in data:
+                                actualValue = str(data.get(key)).lower()
+                                pattern = str(value).lower()
+                                
+                                #use regular expressions to account for wildcards
+                                pattern = re.escape(pattern).replace(r'\*', '.*')
+
+                                regex = re.compile(f"^{pattern}$", re.IGNORECASE)
+                                if regex.match(actualValue):
+                                    logger.log('INFO', f'MESSAGE: {data}')
+                                    self.messageBuffer.put(data)
+            '''
             with open(path, 'a', newline='', encoding='utf-8') as file:
                 writer = None
                 wrote_header = False
@@ -106,15 +134,17 @@ class kafka(ComponentBase):
                                 file.write(json.dumps(data) + "\n")
                             file.flush()
                 consumer.close()
+            '''
         except Exception as e:
             logger.log('INFO', f'THREAD FAILED: {e}')
         finally:
             logger.log('INFO', 'EXITING THREAD.')
-            self.t1.join()
 
     def start(self):
+        '''
         global scorch_kafka_running
         scorch_kafka_running = True
+        '''
         logger.log('INFO', f'Starting user component: {self.name}')
 
         #get all variables from tags
@@ -126,7 +156,19 @@ class kafka(ComponentBase):
         output_dir = self.base_dir
         logger.log('INFO', f'Output Directory: {output_dir}')
         os.makedirs(output_dir, exist_ok=True)
+        if csvBool:
+            self.path = os.path.join(output_dir, 'out.csv')
+        else:
+            self.path = os.path.join(output_dir, 'out.txt')
 
+        with open(self.path, 'w', encoding='utf-8') as file:
+            f.write('')
+
+        self.t1 = threading.Thread(target=self.helper, args=(csvBool, self.path, kafka_ips, topics))
+        self.t1.start()
+        logger.log('INFO', f'Started user component: {self.name}')
+        
+        '''
         all_keys = set()
         wrote_header = False
 
@@ -146,18 +188,37 @@ class kafka(ComponentBase):
             logger.log('INFO', f'FAILED: {e}')
         finally:
             logger.log('INFO', f'Started user component: {self.name}')
+        '''
 
     def stop(self):
         logger.log('INFO', f'Stopping user component: {self.name}')
-        global scorch_kafka_running
-        scorch_kafka_running = False
+        self.stopThread.set()
         self.t1.join()
 
-    def cleanup(self):
-        logger.log('INFO', f'Cleaning up user component: {self.name}')
+        #just output all of the data to the file at the end
+        with open(self.path, 'a', encoding='utf-8') as file:
+            if self.metadata.get("csv", True):
+                data = []
+                while not self.messageBuffer.empty():
+                    data.append(self.messageBuffer.get())
+
+                if data:
+                    fieldnames = sorted(set(k for d in data for k in d.keys()))
+                    writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction='ignore')
+                    writer.writeheader()
+                    writer.writerows(data)
+            else:
+                while not self.messageBuffer.empty():
+                    f.write(json.dumps(self.messageBuffer.get()) + '\n')
+
+        '''
         global scorch_kafka_running
         scorch_kafka_running = False
         self.t1.join()
+        '''
+
+    def cleanup(self):
+        self.stop()
 
 def main():
     kafka()
