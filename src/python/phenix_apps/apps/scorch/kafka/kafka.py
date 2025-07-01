@@ -166,6 +166,7 @@ class kafka(ComponentBase):
 
         self.t1 = threading.Thread(target=self.helper, args=(csvBool, self.path, kafka_ips, topics))
         self.t1.start()
+        self.mark_ready()
         logger.log('INFO', f'Started user component: {self.name}')
         
         '''
