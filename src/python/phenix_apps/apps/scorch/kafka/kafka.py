@@ -8,7 +8,6 @@ from datetime import datetime
 from queue import Queue
 
 scorch_kafka_running = False
-self.messageBuffer = Queue()
 
 class kafka(ComponentBase):
     def __init__(self):
@@ -16,6 +15,7 @@ class kafka(ComponentBase):
         self.execute_stage()
 
     def start(self):
+        self.messageBuffer = Queue()
         global scorch_kafka_running
         scorch_kafka_running = True
         logger.log('INFO', f'Starting user component: {self.name}')
