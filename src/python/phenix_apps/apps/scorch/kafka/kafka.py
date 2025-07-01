@@ -31,38 +31,7 @@ class kafka(ComponentBase):
         all_keys = set()
         wrote_header = False
 
-        #list of all topic names we want the consumer to subscribe to
-        subscribedTopics = []
-        foundTopics = False
-
-        #get all topic names
-        if not topics:
-            logger.log('INFO', f'No topics subscribed to')
-        
-        for topic in topics:
-            name =  topic.get("name")
-
-            #handle wildcards in the name, this only supports right wildcards
-            if '*' in name:
-                foundTopics = False
-                filteredName = name.split('*')[0] #we don't care about anything right of the wildcard
-                pattern = f'^{re.escape(filteredName)}.*'
-                while foundTopics == False: #if this is a new experiment, kafka may not have populated any tags... so wait until it has
-                    for topic in consumer.topics():
-                        if str(filteredName) in str(topic):
-                            subscribedTopics.append(topic)
-                    if subscribedTopics:
-                        foundTopics = True
-                    else:
-                        time.sleep(5) #we don't need to be constantly scaning for data, so sleep for a few seconds imbetween attempts
-            elif name:
-                subscribedTopics.append(name)
-
-        logger.log('INFO', f'Subscribed Topics: {subscribedTopics}')
-        #subscribe to all topic names
-        consumer.subscribe(subscribedTopics)
-
-        def helper(csvBool, path, kafka_ips, subscribedTopics, topics):
+        def helper(csvBool, path, kafka_ips, topics):
             try:
 
                 #kafka consumer
@@ -73,6 +42,37 @@ class kafka(ComponentBase):
                     enable_auto_commit=False,
                     value_deserializer=lambda m: json.loads(m.decode('utf-8'))
                 )
+
+                #list of all topic names we want the consumer to subscribe to
+                subscribedTopics = []
+                foundTopics = False
+
+                #get all topic names
+                if not topics:
+                    logger.log('INFO', f'No topics subscribed to')
+                
+                for topic in topics:
+                    name =  topic.get("name")
+
+                    #handle wildcards in the name, this only supports right wildcards
+                    if '*' in name:
+                        foundTopics = False
+                        filteredName = name.split('*')[0] #we don't care about anything right of the wildcard
+                        pattern = f'^{re.escape(filteredName)}.*'
+                        while foundTopics == False: #if this is a new experiment, kafka may not have populated any tags... so wait until it has
+                            for topic in consumer.topics():
+                                if str(filteredName) in str(topic):
+                                    subscribedTopics.append(topic)
+                            if subscribedTopics:
+                                foundTopics = True
+                            else:
+                                time.sleep(5) #we don't need to be constantly scaning for data, so sleep for a few seconds imbetween attempts
+                    elif name:
+                        subscribedTopics.append(name)
+
+                logger.log('INFO', f'Subscribed Topics: {subscribedTopics}')
+                #subscribe to all topic names
+                consumer.subscribe(subscribedTopics)
 
                 with open(path, 'a', newline='', encoding='utf-8') as file:
                     writer = None
@@ -135,7 +135,7 @@ class kafka(ComponentBase):
             else:
                 path = os.path.join(output_dir, 'out.txt')
             
-            self.t1 = threading.Thread(target=helper, args=(csvBool, path, kafka_ips, subscribedTopics, topics))
+            self.t1 = threading.Thread(target=helper, args=(csvBool, path, kafka_ips, topics))
             self.t1.start()
         except Exception as e:
             logger.log('INFO', f'FAILED: {e}')
