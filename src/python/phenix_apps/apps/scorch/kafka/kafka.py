@@ -71,73 +71,77 @@ class kafka(ComponentBase):
         all_keys = set()
         wrote_header = False
 
-        def helper(csvBool):
-            while scorch_kafka_running:
-                for message in consumer:
-                    storeMessage = False
+        def helper(csvBool, path):
+            try:
+                with open(path, 'a', newline='', encoding='utf-8') as file:
+                    writer = None
+                    wrote_header = False
+                    all_keys = set()
 
-                    #grab unfiltered/ unprocessed message data
-                    data = message.value
+                    while scorch_kafka_running:
+                        for message in consumer:
+                            storeMessage = False
 
-                    #for each topic, check if this message has the desired key and value
-                    for topic in topics:
-                        for filterVal in topic.get("filter", []):
-                            key = filterVal.get("key")
-                            value = filterVal.get("value")
+                            #grab unfiltered/ unprocessed message data
+                            data = message.value
 
-                            wildcardValue = False
+                            #for each topic, check if this message has the desired key and value
+                            for topic in topics:
+                                for filterVal in topic.get("filter", []):
+                                    key = filterVal.get("key")
+                                    value = filterVal.get("value")
 
-                            if key in data:
-                                actualValue = str(data.get(key)).lower()
-                                pattern = str(value).lower()
+                                    wildcardValue = False
 
-                                pattern = re.escape(pattern).replace(r'\*', '.*')
+                                    if key in data:
+                                        actualValue = str(data.get(key)).lower()
+                                        pattern = str(value).lower()
+                                        
+                                        #use regular expressions to account for wildcards
+                                        pattern = re.escape(pattern).replace(r'\*', '.*')
 
-                                regex = re.compile(f"^{pattern}$", re.IGNORECASE)
-                                #if str(value).lower() == str(data.get(key)).lower() or (wildcardValue and str(value).lower() in str(data.get(key)).lower()):
-                                if regex.match(actualValue):
-                                    if csvBool:
-                                        all_keys.update(data.keys())
+                                        regex = re.compile(f"^{pattern}$", re.IGNORECASE)
+                                        if regex.match(actualValue):
+                                            if csvBool:
+                                                all_keys.update(data.keys())
 
-                                        if writer is None:
-                                            writer = csv.DictWriter(file, fieldnames=sorted(all_keys), extrasaction='ignore')
-                                            
-                                            #check if the first line in the csv has been written yet, write it if not
-                                            if not wrote_header:
-                                                writer.writeheader()
-                                                wrote_header = True
+                                                if writer is None:
+                                                    writer = csv.DictWriter(file, fieldnames=sorted(all_keys), extrasaction='ignore')
+                                                    
+                                                    #check if the first line in the csv has been written yet, write it if not
+                                                    if not wrote_header:
+                                                        writer.writeheader()
+                                                        wrote_header = True
 
-                                    storeMessage = True
+                                            storeMessage = True
 
-                    if storeMessage:
-                        #write the data and flush the data to ensure that we don't save to buffer
-                        if csvBool:
-                            writer.writerow(data)
-                        else:
-                            file.write(json.dumps(data) + "\n")
-                        file.flush()
+                            if storeMessage:
+                                #write the data and flush the data to ensure that we don't save to buffer
+                                if csvBool:
+                                    writer.writerow(data)
+                                else:
+                                    file.write(json.dumps(data) + "\n")
+                                file.flush()
+            except Exception as e:
+                logger.log('INFO', f'THREAD FAILED: {e}')
+            finally:
+                logger.log('INFO', 'EXITING THREAD.')
+                consumer.close()
+                scorch_kafka_running = False
 
         try:
             #run the consumer, try to find all messages with the relevant tags
             if csvBool:
-                with open(os.path.join(output_dir, 'out.csv'), mode="a", newline="", encoding="utf-8") as file:
-                    if csvBool:
-                        writer = None
-                    t1 = threading.Thread(target=helper, args=(csvBool,))
-                    t1.start()
-                    #helper(csvBool)
+                path = os.path.join(output_dir, 'out.csv')
             else:
-                with open(os.path.join(output_dir, 'out.txt'), mode='a', encoding='utf-8') as file:
-                    t1 = threading.Thread(target=helper, args=(csvBool,))
-                    t1.start()
-                    #helper(csvBool)
-
+                path = os.path.join(output_dir, 'out.txt')
+            
+            t1 = threading.Thread(target=helper, args=(csvBool,))
+            t1.start()
         except Exception as e:
             logger.log('INFO', f'FAILED: {e}')
         finally:
-            logger.log('INFO', f'CLOSING: {e}')
-            consumer.close()
-            scorch_kafka_running = False
+            logger.log('INFO', 'CLOSING.')
 
     def stop(self):
         logger.log('INFO', f'Stopping user component: {self.name}')
