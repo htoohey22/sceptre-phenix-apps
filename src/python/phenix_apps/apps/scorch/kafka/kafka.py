@@ -137,6 +137,7 @@ class kafka(ComponentBase):
             
             self.t1 = threading.Thread(target=helper, args=(csvBool, path, kafka_ips, topics), daemon=True)
             self.t1.start()
+            time.sleep(1)
         except Exception as e:
             logger.log('INFO', f'FAILED: {e}')
         finally:
