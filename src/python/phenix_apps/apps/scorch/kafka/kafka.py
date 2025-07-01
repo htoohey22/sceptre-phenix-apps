@@ -136,7 +136,7 @@ class kafka(ComponentBase):
             else:
                 path = os.path.join(output_dir, 'out.txt')
             
-            t1 = threading.Thread(target=helper, args=(csvBool,))
+            t1 = threading.Thread(target=helper, args=(csvBool,path))
             t1.start()
         except Exception as e:
             logger.log('INFO', f'FAILED: {e}')
