@@ -120,7 +120,7 @@ class kafka(ComponentBase):
                             if storeMessage:
                                 logger.log('INFO', f'MESSAGE: {data}')
                                 #write the data and flush the data to ensure that we don't save to buffer
-                                self.message_buffer.put(data)
+                                self.messageBuffer.put(data)
                                 '''
                                 if csvBool:
                                     writer.writerow(data)
@@ -154,8 +154,8 @@ class kafka(ComponentBase):
     def stop(self):
         logger.log('INFO', f'Stopping user component: {self.name}')
         with open(self.path, 'a', encoding='utf-8') as file:
-            while not self.message_buffer.empty():
-                msg = self.message_buffer.get()
+            while not self.messageBuffer.empty():
+                msg = self.messageBuffer.get()
                 file.write(json.dumps(msg) + "\n")
             file.flush()
         global scorch_kafka_running
