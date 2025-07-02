@@ -164,9 +164,11 @@ class kafka(ComponentBase):
         with open(self.path, 'w', encoding='utf-8') as file:
             file.write('')
 
-        self.t1 = threading.Thread(target=self.helper, args=(csvBool, self.path, kafka_ips, topics), daemon=True)
+        self.t1 = threading.Thread(target=self.helper, args=(csvBool, self.path, kafka_ips, topics), daemon=False)
         self.t1.start()
         logger.log('INFO', f'Started user component: {self.name}')
+
+        
         
         '''
         all_keys = set()
