@@ -10,8 +10,7 @@ import re
 import os
 from phenix_apps.apps.scorch import ComponentBase
 from phenix_apps.common import logger, utils
-from kafka import KafkaConsumer
-from kafka.errors import KafkaError
+import kafka
 
 def run(csvBool, path, kafka_ips, topics):
     kafka_ips = kafka_ips.split(',')
