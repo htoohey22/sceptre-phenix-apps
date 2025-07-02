@@ -41,13 +41,13 @@ class Kafka(ComponentBase):
             self.path = os.path.join(output_dir, f'kafka_{self.name}_output.csv')
         else:
             self.path = os.path.join(output_dir, f'kafka_{self.name}_output.json')
-        
+
 
         kafka_ips_str = ",".join(kafka_ips)
         topics_str = json.dumps(topics)
 
         #pass the inputs to the python file (which we execute as a separate process)
-        executable  = "/usr/local/lib/python3.12/dist-packages/phenix_apps/apps/scorch/kafka/scorch_kafka_listener.py"
+        executable  = "/usr/local/lib/python3.12/dist-packages/phenix_apps/apps/scorch/kafka/kafka_listener.py"
         arguments = f"python3 {executable} {csvBool} '{self.path}' {kafka_ips_str} '{topics_str}'"
         command = shlex.split(arguments)
 
