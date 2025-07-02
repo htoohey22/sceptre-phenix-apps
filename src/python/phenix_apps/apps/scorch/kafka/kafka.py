@@ -8,6 +8,7 @@ import sys
 import csv
 import re
 import os
+import time
 from phenix_apps.apps.scorch import ComponentBase
 from phenix_apps.common import logger, utils
 from kafka import KafkaConsumer
