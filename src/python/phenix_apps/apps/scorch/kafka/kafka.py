@@ -167,7 +167,7 @@ class Kafka(ComponentBase):
         self.t1.join()
 
 def main():
-    kafka()
+    Kafka()
 
 if __name__ == '__main__':
     main()
