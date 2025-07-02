@@ -70,7 +70,7 @@ class Kafka(ComponentBase):
                 wrote_header = False
                 all_keys = set()
 
-                while scorch_kafka_running:
+                while self.scorch_kafka_running:
                     for message in consumer:
                         storeMessage = False
 
@@ -123,7 +123,7 @@ class Kafka(ComponentBase):
             self.t1.join()
 
     def start(self):
-        scorch_kafka_running = True
+        self.scorch_kafka_running = True
         logger.log('INFO', f'Starting user component: {self.name}')
 
         #get all variables from tags
@@ -158,12 +158,12 @@ class Kafka(ComponentBase):
 
     def stop(self):
         logger.log('INFO', f'Stopping user component: {self.name}')
-        scorch_kafka_running = False
+        self.scorch_kafka_running = False
         self.t1.join()
 
     def cleanup(self):
         logger.log('INFO', f'Cleaning up user component: {self.name}')
-        scorch_kafka_running = False
+        self.scorch_kafka_running = False
         self.t1.join()
 
 def main():
