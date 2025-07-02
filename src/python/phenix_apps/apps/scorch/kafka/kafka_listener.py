@@ -14,6 +14,15 @@ from phenix_apps.common import logger, utils
 from kafka import KafkaConsumer
 from kafka.errors import KafkaError
 
+if __name__ == '__main__':
+    #unpack the args
+    csvBool = sys.argv[1].lower() == 'true'
+    path = sys.argv[2]
+    kafka_ips = sys.argv[3]
+    topics = sys.argv[4]
+
+    run(csvBool, path, kafka_ips, topics)
+
 def run(csvBool, path, kafka_ips, topics):
     kafka_ips = kafka_ips.split(',')
     topics = json.loads(topics)
@@ -32,7 +41,7 @@ def run(csvBool, path, kafka_ips, topics):
 
     #get all topic names
     if not topics:
-        self.eprint('ERROR', 'No topics subscribed to')
+        logger.log('ERROR', 'No topics subscribed to')
         exit() #TODO: make it subscribe to all topics when none are selected
 
     for topic in topics:
@@ -61,48 +70,48 @@ def run(csvBool, path, kafka_ips, topics):
         #subscribe to all topic names
         consumer.subscribe(subscribedTopics)
 
-    while True:
-        for message in consumer:
-            storeMessage = False
+        while True:
+            for message in consumer:
+                storeMessage = False
 
-            #grab unfiltered/ unprocessed message data
-            data = message.value
+                #grab unfiltered/ unprocessed message data
+                data = message.value
 
-            #for each topic, check if this message has the desired key and value
-            for topic in topics:
-                for filterVal in topic.get("filter", []):
-                    key = filterVal.get("key")
-                    value = filterVal.get("value")
+                #for each topic, check if this message has the desired key and value
+                for topic in topics:
+                    for filterVal in topic.get("filter", []):
+                        key = filterVal.get("key")
+                        value = filterVal.get("value")
 
-                    wildcardValue = False
+                        wildcardValue = False
 
-                    if key in data:
-                        actualValue = str(data.get(key)).lower()
-                        pattern = str(value).lower()
+                        if key in data:
+                            actualValue = str(data.get(key)).lower()
+                            pattern = str(value).lower()
 
-                        #use regular expressions to account for wildcards
-                        pattern = re.escape(pattern).replace(r'\*', '.*')
+                            #use regular expressions to account for wildcards
+                            pattern = re.escape(pattern).replace(r'\*', '.*')
 
-                        regex = re.compile(f"^{pattern}$", re.IGNORECASE)
-                        if regex.match(actualValue):
-                            if csvBool:
-                                all_keys.update(data.keys())
+                            regex = re.compile(f"^{pattern}$", re.IGNORECASE)
+                            if regex.match(actualValue):
+                                if csvBool:
+                                    all_keys.update(data.keys())
 
-                                if writer is None:
-                                    writer = csv.DictWriter(file, fieldnames=sorted(all_keys), extrasaction='ignore')
+                                    if writer is None:
+                                        writer = csv.DictWriter(file, fieldnames=sorted(all_keys), extrasaction='ignore')
 
-                                    #check if the first line in the csv has been written yet, write it if not
-                                    if not wrote_header:
-                                        writer.writeheader()
-                                        wrote_header = True
+                                        #check if the first line in the csv has been written yet, write it if not
+                                        if not wrote_header:
+                                            writer.writeheader()
+                                            wrote_header = True
 
-                            storeMessage = True
+                                storeMessage = True
 
-            if storeMessage:
-                logger.log('INFO', f'MESSAGE: {data}')
-                #write the data and flush the data to ensure that we don't save to buffer
-                if csvBool:
-                    writer.writerow(data)
-                else:
-                    file.write(json.dumps(data) + "\n")
-                file.flush()
+                if storeMessage:
+                    logger.log('INFO', f'MESSAGE: {data}')
+                    #write the data and flush the data to ensure that we don't save to buffer
+                    if csvBool:
+                        writer.writerow(data)
+                    else:
+                        file.write(json.dumps(data) + "\n")
+                    file.flush()

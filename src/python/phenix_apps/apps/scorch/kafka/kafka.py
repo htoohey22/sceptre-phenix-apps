@@ -41,7 +41,7 @@ class Kafka(ComponentBase):
             self.path = os.path.join(output_dir, f'kafka_{self.name}_output.csv')
         else:
             self.path = os.path.join(output_dir, f'kafka_{self.name}_output.json')
-
+        
 
         kafka_ips_str = ",".join(kafka_ips)
         topics_str = json.dumps(topics)
