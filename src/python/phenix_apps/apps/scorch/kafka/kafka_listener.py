@@ -14,16 +14,6 @@ from phenix_apps.common import logger, utils
 from kafka import KafkaConsumer
 from kafka.errors import KafkaError
 
-if __name__ == '__main__':
-    logger.log('INFO', 'HERE')
-    #unpack the args
-    csvBool = sys.argv[1].lower() == 'true'
-    path = sys.argv[2]
-    kafka_ips = sys.argv[3]
-    topics = sys.argv[4]
-
-    run(csvBool, path, kafka_ips, topics)
-
 def run(csvBool, path, kafka_ips, topics):
     kafka_ips = kafka_ips.split(',')
     topics = json.loads(topics)
@@ -116,3 +106,17 @@ def run(csvBool, path, kafka_ips, topics):
                     else:
                         file.write(json.dumps(data) + "\n")
                     file.flush()
+
+
+def main():
+    run()
+
+if __name__ == '__main__':
+    logger.log('INFO', 'HERE')
+    #unpack the args
+    csvBool = sys.argv[1].lower() == 'true'
+    path = sys.argv[2]
+    kafka_ips = sys.argv[3]
+    topics = sys.argv[4]
+
+    run(csvBool, path, kafka_ips, topics)
