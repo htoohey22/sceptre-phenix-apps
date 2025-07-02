@@ -1,4 +1,11 @@
-import json, itertools, threading, time, sys, csv, re, os
+import json
+import itertools
+import threading
+import time
+import sys
+import csv
+import re
+import os
 
 from phenix_apps.apps.scorch import ComponentBase
 from phenix_apps.common import logger, utils
@@ -7,12 +14,14 @@ from kafka.errors import KafkaError
 from datetime import datetime
 from queue import Queue
 
-scorch_kafka_running = False
-
-class kafka(ComponentBase):
+class Kafka(ComponentBase):
     def __init__(self):
         ComponentBase.__init__(self, 'kafka')
         self.execute_stage()
+        self.scorch_kafka_running = False
+  
+    def configure(self):
+        start()
 
     def helper(self, csvBool, path, kafka_ips, topics):
         try:
@@ -42,7 +51,7 @@ class kafka(ComponentBase):
                     foundTopics = False
                     filteredName = name.split('*')[0] #we don't care about anything right of the wildcard
                     pattern = f'^{re.escape(filteredName)}.*'
-                    while foundTopics == False: #if this is a new experiment, kafka may not have populated any tags... so wait until it has
+                    while not foundTopics: #if this is a new experiment, kafka may not have populated any tags... so wait until it has
                         for topic in consumer.topics():
                             if str(filteredName) in str(topic):
                                 subscribedTopics.append(topic)
@@ -114,7 +123,6 @@ class kafka(ComponentBase):
             self.t1.join()
 
     def start(self):
-        global scorch_kafka_running
         scorch_kafka_running = True
         logger.log('INFO', f'Starting user component: {self.name}')
 
@@ -134,9 +142,9 @@ class kafka(ComponentBase):
         try:
             #run the consumer, try to find all messages with the relevant tags
             if csvBool:
-                self.path = os.path.join(output_dir, 'out.csv')
+                self.path = os.path.join(output_dir, 'kafka_{self.name}_output.csv')
             else:
-                self.path = os.path.join(output_dir, 'out.txt')
+                self.path = os.path.join(output_dir, 'kafka_{self.name}_output.json')
 
             self.t1 = threading.Thread(target=self.helper, args=(csvBool, self.path, kafka_ips, topics))
             self.t1.start()
@@ -150,13 +158,11 @@ class kafka(ComponentBase):
 
     def stop(self):
         logger.log('INFO', f'Stopping user component: {self.name}')
-        global scorch_kafka_running
         scorch_kafka_running = False
         self.t1.join()
 
     def cleanup(self):
         logger.log('INFO', f'Cleaning up user component: {self.name}')
-        global scorch_kafka_running
         scorch_kafka_running = False
         self.t1.join()
 

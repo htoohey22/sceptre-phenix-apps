@@ -1,4 +1,4 @@
-# minimega (kafka) Component
+# phenix (kafka) Component
 Collects and filters desired Kafka data into CSV/ JSON format, so that Kafka data can be easily used by programs such as Excel. The output directory for the data is listed in the phenix log when the scorch component starts.
 
 ```
@@ -18,7 +18,7 @@ metadata:
 
 ```yaml
 - metadata:
-    bootstrap Servers:
+    kafka_ips:
       - 1.0.0.0:9092 #Kafka uses port 9092
     csv: false
     topics:
@@ -30,6 +30,6 @@ metadata:
         name: {{BRANCH_NAME}}.foo.bar
       - filter:
           - key: foo3
-            value: bar3
+            value: bar* #wildcards work for values
         name: {{BRANCH_NAME}}.foo2.bar2
 ```
