@@ -1,128 +1,19 @@
-import json
-import itertools
-import threading
-import time
-import sys
-import csv
-import re
-import os
-
+import subprocess
+import shlex
 from phenix_apps.apps.scorch import ComponentBase
 from phenix_apps.common import logger, utils
 from kafka import KafkaConsumer
 from kafka.errors import KafkaError
-from datetime import datetime
-from queue import Queue
 
 class Kafka(ComponentBase):
     def __init__(self):
         ComponentBase.__init__(self, 'kafka')
+        self.pid_file = f"/tmp/kafka-{self.exp_name}.pid"
         self.execute_stage()
-        self.scorch_kafka_running = False
-  
+    
+    #configure just calls start
     def configure(self):
         start()
-
-    def helper(self, csvBool, path, kafka_ips, topics):
-        try:
-
-            #kafka consumer
-            consumer = KafkaConsumer(
-                #bootstrap ip and port could probably be separate variables in the future
-                bootstrap_servers = kafka_ips,
-                auto_offset_reset='latest',
-                enable_auto_commit=False,
-                value_deserializer=lambda m: json.loads(m.decode('utf-8'))
-            )
-
-            #list of all topic names we want the consumer to subscribe to
-            subscribedTopics = []
-            foundTopics = False
-
-            #get all topic names
-            if not topics:
-                self.eprint('ERROR', 'No topics subscribed to')
-                exit() #TODO: make it subscribe to all topics when none are selected
-
-            for topic in topics:
-                name =  topic.get("name")
-
-                #handle wildcards in the name, this only supports right wildcards
-                if '*' in name:
-                    foundTopics = False
-                    filteredName = name.split('*')[0] #we don't care about anything right of the wildcard
-                    pattern = f'^{re.escape(filteredName)}.*'
-                    while not foundTopics: #if this is a new experiment, kafka may not have populated any tags... so wait until it has
-                        for topic in consumer.topics():
-                            if str(filteredName) in str(topic):
-                                subscribedTopics.append(topic)
-                        if subscribedTopics:
-                            foundTopics = True
-                        else:
-                            time.sleep(5) #we don't need to be constantly scaning for data, so sleep for a few seconds imbetween attempts
-                elif name:
-                    subscribedTopics.append(name)
-
-            #subscribe to all topic names
-            consumer.subscribe(subscribedTopics)
-
-            with open(path, 'a', newline='', encoding='utf-8') as file:
-                writer = None
-                wrote_header = False
-                all_keys = set()
-
-                while self.scorch_kafka_running:
-                    for message in consumer:
-                        storeMessage = False
-
-                        #grab unfiltered/ unprocessed message data
-                        data = message.value
-
-                        #for each topic, check if this message has the desired key and value
-                        for topic in topics:
-                            for filterVal in topic.get("filter", []):
-                                key = filterVal.get("key")
-                                value = filterVal.get("value")
-
-                                wildcardValue = False
-
-                                if key in data:
-                                    actualValue = str(data.get(key)).lower()
-                                    pattern = str(value).lower()
-
-                                    #use regular expressions to account for wildcards
-                                    pattern = re.escape(pattern).replace(r'\*', '.*')
-
-                                    regex = re.compile(f"^{pattern}$", re.IGNORECASE)
-                                    if regex.match(actualValue):
-                                        if csvBool:
-                                            all_keys.update(data.keys())
-
-                                            if writer is None:
-                                                writer = csv.DictWriter(file, fieldnames=sorted(all_keys), extrasaction='ignore')
-
-                                                #check if the first line in the csv has been written yet, write it if not
-                                                if not wrote_header:
-                                                    writer.writeheader()
-                                                    wrote_header = True
-
-                                        storeMessage = True
-
-                        if storeMessage:
-                            logger.log('INFO', f'MESSAGE: {data}')
-                            #write the data and flush the data to ensure that we don't save to buffer
-                            if csvBool:
-                                writer.writerow(data)
-                            else:
-                                file.write(json.dumps(data) + "\n")
-                            file.flush()
-                consumer.close()
-        except Exception as e:
-            self.eprint('ERROR', f'THREAD FAILED: {e}')
-            exit()
-        finally:
-            logger.log('INFO', 'EXITING THREAD.')
-            self.t1.join()
 
     def start(self):
         self.scorch_kafka_running = True
@@ -130,43 +21,68 @@ class Kafka(ComponentBase):
 
         #get all variables from tags
         kafka_ips = self.metadata.get("kafka_ips", ["172.20.0.63:9092"])
-        topics = self.metadata.get("topics", None)
+        topics = self.metadata.get("topics", [])
         csvBool = self.metadata.get("csv", True) #if false output a JSON
 
         #get and output the output directory to the logger
         output_dir = self.base_dir
         logger.log('INFO', f'Output Directory: {output_dir}')
         os.makedirs(output_dir, exist_ok=True)
+        if csvBool:
+            self.path = os.path.join(output_dir, f'kafka_{self.name}_output.csv')
+        else:
+            self.path = os.path.join(output_dir, f'kafka_{self.name}_output.json')
 
-        all_keys = set()
-        wrote_header = False
+
+        kafka_ips_str = ",".join(kafka_ips)
+        topics_str = json.dumps(topics)
+
+        #pass the inputs to the python file (which we execute as a separate process)
+        executable  = "/usr/local/lib/python3.12/dist-packages/phenix_apps/apps/scorch/kafka/scorch_kafka_listener.py"
+        arguments = f"python3 {executable} {csvBool} '{self.path}' {kafka_ips_str} '{topics_str}'"
+        command = shlex.split(arguments)
 
         try:
-            #run the consumer, try to find all messages with the relevant tags
-            if csvBool:
-                self.path = os.path.join(output_dir, f'kafka_{self.name}_output.csv')
-            else:
-                self.path = os.path.join(output_dir, f'kafka_{self.name}_output.json')
-
-            self.t1 = threading.Thread(target=self.helper, args=(csvBool, self.path, kafka_ips, topics))
-            self.t1.start()
-
-            #this sleep is required to ensure that the out file is actually created BEFORE moving onto the next component
-            time.sleep(1)
+            log_file = open("/var/log/phenix/kafka-app.log", '+a')
+            response = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=log_file, stderr=log_file, start_new_session=True)
+            self._create_pid_file(response.pid) #write PID to a file so that it can be found and killed later
+            response.poll() #prevents hang
         except Exception as e:
-            logger.log('INFO', f'FAILED: {e}')
-        finally:
-            logger.log('INFO', f'Started user component: {self.name}')
+            logger.log("ERROR", f"Error running listener executable. See: {e}")
+
+    def _create_pid_file(self, pid):
+        #writes PID to unique .pid file under /tmp directory
+        try:
+            with open(self.pid_file, "w+") as f:
+                f.write(str(pid))
+        except Exception as e:
+            logger.log("ERROR", f"Could not create PID file. Listener process at PID {pid} will not terminate automatically when experiment ends. See: {e}")
+
+
+    def _consume_pid_file(self):
+        #reads and deletes PID file, returns PID
+        pid = 0
+        try: 
+            with open(self.pid_file, "r") as f:
+                pid = int(f.readline().rstrip())
+            os.remove(self.pid_file)
+            return pid
+        except Exception as e:
+            logger.log("ERROR", f"Error consuming PID file. Listener process at PID {pid} will not be terminated. See: {e}")
+            return pid
 
     def stop(self):
-        logger.log('INFO', f'Stopping user component: {self.name}')
-        self.scorch_kafka_running = False
-        self.t1.join()
+        #stops listener executable
+        pid = self._consume_pid_file()
+        try:
+            os.kill(pid, 9)
+            logger.log("DEBUG", f"Terminated listener with PID {pid}")
+        except Exception as e:
+            logger.log("ERROR", f"Error terminating listener at PID {pid}. See: {e}")
 
+    #cleanup is the same as stop
     def cleanup(self):
-        logger.log('INFO', f'Cleaning up user component: {self.name}')
-        self.scorch_kafka_running = False
-        self.t1.join()
+        self.stop()
 
 def main():
     Kafka()

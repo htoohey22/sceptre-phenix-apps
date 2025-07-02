@@ -1,0 +1,173 @@
+import json
+import itertools
+import threading
+import time
+import sys
+import csv
+import re
+import os
+
+from phenix_apps.apps.scorch import ComponentBase
+from phenix_apps.common import logger, utils
+from kafka import KafkaConsumer
+from kafka.errors import KafkaError
+
+class Kafka(ComponentBase):
+    def __init__(self):
+        ComponentBase.__init__(self, 'kafka')
+        self.execute_stage()
+        self.scorch_kafka_running = False
+  
+    def configure(self):
+        start()
+
+    def helper(self, csvBool, path, kafka_ips, topics):
+        try:
+
+            #kafka consumer
+            consumer = KafkaConsumer(
+                #bootstrap ip and port could probably be separate variables in the future
+                bootstrap_servers = kafka_ips,
+                auto_offset_reset='latest',
+                enable_auto_commit=False,
+                value_deserializer=lambda m: json.loads(m.decode('utf-8'))
+            )
+
+            #list of all topic names we want the consumer to subscribe to
+            subscribedTopics = []
+            foundTopics = False
+
+            #get all topic names
+            if not topics:
+                self.eprint('ERROR', 'No topics subscribed to')
+                exit() #TODO: make it subscribe to all topics when none are selected
+
+            for topic in topics:
+                name =  topic.get("name")
+
+                #handle wildcards in the name, this only supports right wildcards
+                if '*' in name:
+                    foundTopics = False
+                    filteredName = name.split('*')[0] #we don't care about anything right of the wildcard
+                    pattern = f'^{re.escape(filteredName)}.*'
+                    while not foundTopics: #if this is a new experiment, kafka may not have populated any tags... so wait until it has
+                        for topic in consumer.topics():
+                            if str(filteredName) in str(topic):
+                                subscribedTopics.append(topic)
+                        if subscribedTopics:
+                            foundTopics = True
+                        else:
+                            time.sleep(5) #we don't need to be constantly scaning for data, so sleep for a few seconds imbetween attempts
+                elif name:
+                    subscribedTopics.append(name)
+
+            #subscribe to all topic names
+            consumer.subscribe(subscribedTopics)
+
+            with open(path, 'a', newline='', encoding='utf-8') as file:
+                writer = None
+                wrote_header = False
+                all_keys = set()
+
+                while self.scorch_kafka_running:
+                    for message in consumer:
+                        storeMessage = False
+
+                        #grab unfiltered/ unprocessed message data
+                        data = message.value
+
+                        #for each topic, check if this message has the desired key and value
+                        for topic in topics:
+                            for filterVal in topic.get("filter", []):
+                                key = filterVal.get("key")
+                                value = filterVal.get("value")
+
+                                wildcardValue = False
+
+                                if key in data:
+                                    actualValue = str(data.get(key)).lower()
+                                    pattern = str(value).lower()
+
+                                    #use regular expressions to account for wildcards
+                                    pattern = re.escape(pattern).replace(r'\*', '.*')
+
+                                    regex = re.compile(f"^{pattern}$", re.IGNORECASE)
+                                    if regex.match(actualValue):
+                                        if csvBool:
+                                            all_keys.update(data.keys())
+
+                                            if writer is None:
+                                                writer = csv.DictWriter(file, fieldnames=sorted(all_keys), extrasaction='ignore')
+
+                                                #check if the first line in the csv has been written yet, write it if not
+                                                if not wrote_header:
+                                                    writer.writeheader()
+                                                    wrote_header = True
+
+                                        storeMessage = True
+
+                        if storeMessage:
+                            logger.log('INFO', f'MESSAGE: {data}')
+                            #write the data and flush the data to ensure that we don't save to buffer
+                            if csvBool:
+                                writer.writerow(data)
+                            else:
+                                file.write(json.dumps(data) + "\n")
+                            file.flush()
+                consumer.close()
+        except Exception as e:
+            self.eprint('ERROR', f'THREAD FAILED: {e}')
+            exit()
+        finally:
+            logger.log('INFO', 'EXITING THREAD.')
+            self.t1.join()
+
+    def start(self):
+        self.scorch_kafka_running = True
+        logger.log('INFO', f'Starting user component: {self.name}')
+
+        #get all variables from tags
+        kafka_ips = self.metadata.get("kafka_ips", ["172.20.0.63:9092"])
+        topics = self.metadata.get("topics", None)
+        csvBool = self.metadata.get("csv", True) #if false output a JSON
+
+        #get and output the output directory to the logger
+        output_dir = self.base_dir
+        logger.log('INFO', f'Output Directory: {output_dir}')
+        os.makedirs(output_dir, exist_ok=True)
+
+        all_keys = set()
+        wrote_header = False
+
+        try:
+            #run the consumer, try to find all messages with the relevant tags
+            if csvBool:
+                self.path = os.path.join(output_dir, f'kafka_{self.name}_output.csv')
+            else:
+                self.path = os.path.join(output_dir, f'kafka_{self.name}_output.json')
+
+            self.t1 = threading.Thread(target=self.helper, args=(csvBool, self.path, kafka_ips, topics))
+            self.t1.start()
+
+            #this sleep is required to ensure that the out file is actually created BEFORE moving onto the next component
+            time.sleep(1)
+        except Exception as e:
+            logger.log('INFO', f'FAILED: {e}')
+        finally:
+            logger.log('INFO', f'Started user component: {self.name}')
+
+    def stop(self):
+        logger.log('INFO', f'Stopping user component: {self.name}')
+        self.scorch_kafka_running = False
+        self.t1.join()
+
+    def cleanup(self):
+        logger.log('INFO', f'Cleaning up user component: {self.name}')
+        self.scorch_kafka_running = False
+        self.t1.join()
+
+def main():
+    Kafka()
+
+if __name__ == '__main__':
+    main()
