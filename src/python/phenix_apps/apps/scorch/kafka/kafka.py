@@ -41,7 +41,8 @@ class Kafka(ComponentBase):
 
             #get all topic names
             if not topics:
-                logger.log('INFO', f'No topics subscribed to')
+                self.eprint('ERROR', 'No topics subscribed to')
+                exit() #TODO: make it subscribe to all topics when none are selected
 
             for topic in topics:
                 name =  topic.get("name")
@@ -117,7 +118,8 @@ class Kafka(ComponentBase):
                             file.flush()
                 consumer.close()
         except Exception as e:
-            logger.log('INFO', f'THREAD FAILED: {e}')
+            self.eprint('ERROR', f'THREAD FAILED: {e}')
+            exit()
         finally:
             logger.log('INFO', 'EXITING THREAD.')
             self.t1.join()
@@ -142,9 +144,9 @@ class Kafka(ComponentBase):
         try:
             #run the consumer, try to find all messages with the relevant tags
             if csvBool:
-                self.path = os.path.join(output_dir, 'kafka_{self.name}_output.csv')
+                self.path = os.path.join(output_dir, f'kafka_{self.name}_output.csv')
             else:
-                self.path = os.path.join(output_dir, 'kafka_{self.name}_output.json')
+                self.path = os.path.join(output_dir, f'kafka_{self.name}_output.json')
 
             self.t1 = threading.Thread(target=self.helper, args=(csvBool, self.path, kafka_ips, topics))
             self.t1.start()
