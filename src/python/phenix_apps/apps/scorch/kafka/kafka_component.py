@@ -9,11 +9,10 @@ import csv
 import re
 import os
 import time
-import kafka
 from phenix_apps.apps.scorch import ComponentBase
 from phenix_apps.common import logger, utils
-#from kafka import KafkaConsumer
-#from kafka.errors import KafkaError
+from kafka import KafkaConsumer
+from kafka.errors import KafkaError
 
 class Kafka(ComponentBase):
     def __init__(self):
