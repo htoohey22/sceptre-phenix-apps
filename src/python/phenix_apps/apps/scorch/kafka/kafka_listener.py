@@ -9,6 +9,10 @@ import csv
 import re
 import os
 from kafka import KafkaConsumer
+from phenix_apps.apps.scorch import ComponentBase
+from phenix_apps.common import logger, utils
+from kafka import KafkaConsumer
+from kafka.errors import KafkaError
 
 def run(csvBool, path, kafka_ips, topics):
     kafka_ips = kafka_ips.split(',')
