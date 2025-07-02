@@ -15,6 +15,7 @@ from kafka import KafkaConsumer
 from kafka.errors import KafkaError
 
 if __name__ == '__main__':
+    logger.log('INFO', 'HERE')
     #unpack the args
     csvBool = sys.argv[1].lower() == 'true'
     path = sys.argv[2]
