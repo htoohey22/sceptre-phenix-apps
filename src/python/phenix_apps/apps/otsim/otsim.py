@@ -274,6 +274,19 @@ class OTSim(AppBase):
           config.append_to_root(logic.root)
           config.append_to_cpu(module)
 
+      if 'node-red' in fep.metadata:
+          nodered = NodeRed.parse_metadata(fep.metadata)
+
+          module = ET.Element('module', {'name': 'node-red'})
+          module.text = 'ot-sim-node-red-module {{config_file}}'
+
+          config.append_to_root(nodered.root)
+          config.append_to_cpu(module)
+
+          inject = nodered.needs_inject()
+          if inject:
+            self.add_inject(hostname=fep.hostname, inject=inject)
+
       config_file = f'{self.otsim_dir}/{fep.hostname}.xml'
 
       config.to_file(config_file)
