@@ -7,7 +7,7 @@ from kafka import KafkaConsumer
 from kafka.errors import KafkaError
 from pathlib import Path
 
-class Demo(ComponentBase):
+class demo(ComponentBase):
     def __init__(self):
         ComponentBase.__init__(self, 'kafka')
         self.execute_stage()
@@ -35,7 +35,7 @@ class Demo(ComponentBase):
         #nothing really needs to be stopped for this, we didn't start any services... but if we did, we could stop those here
 
 def main():
-    Demo()
+    demo()
 
 if __name__ == '__main__':
     main()
