@@ -31,8 +31,8 @@ class Demo(ComponentBase):
 
         #write to the file
         f = open(filePath, "a")
-        f.write(datetime.datetime.now())
-        
+        f.write(str(datetime.datetime.now()))
+
         #check yaml to see if we want to include the year or not
         #include_year = self.metadata.get("include_year", True)
 
