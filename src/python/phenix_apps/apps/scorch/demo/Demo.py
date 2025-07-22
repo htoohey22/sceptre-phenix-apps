@@ -29,13 +29,13 @@ class Demo(ComponentBase):
         logger.log('INFO', f'Output directory: {output_dir}') 
         filePath = os.path.join(output_dir, f'i_wonder_what_the_time_is.txt')
 
+        #write to the file
+        f = open(filePath, "a")
         f.write(datetime.datetime.now())
-
+        
         #check yaml to see if we want to include the year or not
         #include_year = self.metadata.get("include_year", True)
 
-        #write to the file
-        #f = open(filePath, "a")
         #if include_year:
         #    f.write((datetime.datetime.now()).strftime("%m-%d %H:%M"))
         #else:
