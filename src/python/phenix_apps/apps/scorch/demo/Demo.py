@@ -19,7 +19,7 @@ from pathlib import Path
 
 class Demo(ComponentBase):
     def __init__(self):
-        ComponentBase.__init__(self, 'kafka')
+        ComponentBase.__init__(self, 'Demo')
         self.execute_stage()
     
     def start(self):
