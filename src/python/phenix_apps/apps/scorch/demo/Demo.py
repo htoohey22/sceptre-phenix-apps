@@ -1,7 +1,9 @@
 import datetime
-import os
+import subprocess
+import shlex
 import json
 import itertools
+import threading
 import time
 import sys
 import csv
@@ -11,9 +13,8 @@ import time
 
 from phenix_apps.apps.scorch import ComponentBase
 from phenix_apps.common import logger, utils
-
-from phenix_apps.apps.scorch import ComponentBase
-from phenix_apps.common import logger, utils
+from kafka import KafkaConsumer
+from kafka.errors import KafkaError
 from pathlib import Path
 
 class Demo(ComponentBase):
