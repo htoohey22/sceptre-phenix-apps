@@ -28,10 +28,10 @@ class Demo(ComponentBase):
         #get directory, make output txt file
         output_dir = self.base_dir
         logger.log('INFO', f'Output directory: {output_dir}') 
-        filePath = os.path.join(output_dir, f'i_wonder_what_the_time_is.txt')
+        filePath = os.path.join(output_dir, f'i_wonder_what_time_it_is.txt')
 
         #check yaml to see if we want to include the year or not
-        include_year = self.metadata.get("include_year", True)
+        include_year = self.metadata.get("include_year", False)
 
         #write to the file
         f = open(filePath, "a")
