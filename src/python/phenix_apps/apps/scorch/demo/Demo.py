@@ -36,6 +36,10 @@ class Demo(ComponentBase):
         #write to the file
         f = open(filePath, "a")
 
+        if include_year:
+            f.write(str((datetime.datetime.now()).strftime("%m-%d %H:%M")))
+        else:
+            f.write(str(datetime.datetime.now()))
 
     def stop(self):
         logger.log('INFO', f'Stopping user component: {self.name}')
