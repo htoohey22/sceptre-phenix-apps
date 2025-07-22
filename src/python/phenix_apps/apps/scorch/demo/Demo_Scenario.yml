@@ -12,7 +12,7 @@ spec:
           metadata:
             components:
               - name: what_time_is_it_i_dont_have_a_watch_and_need_to_know_what_time_it_is
-                type: demo
+                type: Demo
                 metadata:
                   include_year: false
             runs:
