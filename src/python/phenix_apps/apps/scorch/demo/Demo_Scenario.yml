@@ -1,0 +1,139 @@
+apiVersion: phenix.sandia.gov/v2
+kind: Scenario
+metadata:
+    name: Demo
+    created: "2025-07-21T14:46:18-06:00"
+    updated: "2025-07-22T09:57:02-06:00"
+    annotations:
+        topology: Demo
+spec:
+    apps:
+        - name: scorch
+          metadata:
+            components:
+              - name: what_time_is_it_i_dont_have_a_watch_and_need_to_know_what_time_it_is
+                type: Demo
+                metadata:
+                  include_year: false
+            runs:
+              - start:
+                  - what_time_is_it_i_dont_have_a_watch_and_need_to_know_what_time_it_is
+        - name: ovs-patch
+        - hosts:
+            - hostname: control-center
+              metadata:
+                connected_rtus:
+                    - ieee13-1-rtu
+                name: ieee13
+                type: dtm
+          name: tmw
+        - hosts:
+            - hostname: ieee13-1-rtu
+              metadata:
+                connected_rtus:
+                    - cap1-ied
+                    - cap2-ied
+                    - 671692-ied
+                    - regfaseb-ied
+                    - regfasec-ied
+                    - regfasea-ied
+                type: fep
+            - hostname: cap1-ied
+              metadata:
+                dnp3:
+                    - name: cap1
+                      type: capacitor
+                helics:
+                    federate: cap1
+                type: fd-server
+            - hostname: cap2-ied
+              metadata:
+                dnp3:
+                    - name: cap2
+                      type: capacitor
+                helics:
+                    federate: cap2
+                type: fd-server
+            - hostname: 671692-ied
+              metadata:
+                dnp3:
+                    - name: "671692"
+                      type: breaker
+                helics:
+                    federate: "671692"
+                type: fd-server
+            - hostname: regfaseb-ied
+              metadata:
+                dnp3:
+                    - name: regfaseb
+                      type: regulator
+                helics:
+                    federate: regfaseb
+                type: fd-server
+            - hostname: regfasec-ied
+              metadata:
+                dnp3:
+                    - name: regfasec
+                      type: regulator
+                helics:
+                    federate: regfasec
+                type: fd-server
+            - hostname: regfasea-ied
+              metadata:
+                dnp3:
+                    - name: regfasea
+                      type: regulator
+                helics:
+                    federate: regfasea
+                type: fd-server
+          metadata:
+            helics:
+                broker:
+                    hostname: broker|eth0
+                endpoint: updates
+                federate: opendss
+                log-level: summary
+          name: ot-sim
+        - metadata:
+            taps:
+                - externalAccess:
+                    enabled: true
+                  ip: 172.16.0.101/16
+                  vlan: MGMT
+          name: tap
+        - hosts:
+            - hostname: opendss
+              metadata:
+                env_vars:
+                    config_folder_path: /phenix/injects/ieee13/opendss/configs
+                    freq_feeder_secs: 6
+                    load_folder_path: /phenix/injects/ieee13/opendss/model
+                    load_folder_separate: false
+                    master_file_path: /phenix/injects/ieee13/opendss/model/master.dss
+                federate_type: power
+                injection_src: /phenix/injects/ieee13/opendss
+          metadata:
+            env_vars:
+                experiment_duration_secs: 3.6e+07
+                in_real_time: true
+                loglevel: info
+            kafka:
+                ip: 172.20.0.43
+          name: federate
+        - metadata:
+            minimeta:
+                gateway: MGMT
+                networks:
+                    - name: MGMT
+                      network: 172.16.99.0/16
+                    - name: ieee13_1_LAN
+                      network: 10.1.99.0/16
+            mqtt:
+                broker:
+                    endpoint: tcp://172.20.0.43:1883
+          name: ami
+        - metadata:
+            broker:
+                log-level: summary
+                root: broker|eth0
+          name: helics

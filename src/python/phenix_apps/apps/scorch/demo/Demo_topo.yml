@@ -1,0 +1,327 @@
+apiVersion: phenix.sandia.gov/v1
+kind: Topology
+metadata:
+    name: Demo
+    created: "2025-07-21T14:46:18-06:00"
+    updated: "2025-07-22T09:57:02-06:00"
+spec:
+    nodes:
+        - general:
+            hostname: broker
+            snapshot: true
+            vm_type: kvm
+          hardware:
+            drives:
+                - image: ot-sim.qc2
+            memory: 8192
+            os_type: linux
+            vcpus: 8
+          network:
+            interfaces:
+                - address: 172.16.0.2
+                  mask: 16
+                  name: eth0
+                  proto: static
+                  type: ethernet
+                  vlan: MGMT
+          type: VirtualMachine
+        - general:
+            hostname: opendss
+            snapshot: true
+            vm_type: kvm
+          hardware:
+            drives:
+                - image: federate.qc2
+            memory: 2048
+            os_type: linux
+            vcpus: 2
+          network:
+            interfaces:
+                - address: 172.16.1.2
+                  dns: 10.10.100.1
+                  gateway: 172.16.0.101
+                  mask: 16
+                  name: eth0
+                  proto: static
+                  type: ethernet
+                  vlan: MGMT
+          type: VirtualMachine
+        - annotations:
+            includes-phenix-startup: true
+            phenix/windows-rearm: true
+          general:
+            hostname: control-center
+            snapshot: true
+            vm_type: kvm
+          hardware:
+            drives:
+                - image: control-center.qc2
+            memory: 8192
+            os_type: windows
+            vcpus: 2
+          network:
+            interfaces:
+                - address: 20.20.0.2
+                  gateway: 20.20.0.1
+                  mask: 16
+                  name: eth1
+                  proto: static
+                  type: ethernet
+                  vlan: Control_Center_LAN
+                - address: 172.16.1.6
+                  mask: 16
+                  name: eth2
+                  proto: static
+                  type: ethernet
+                  vlan: MGMT
+          type: VirtualMachine
+        - general:
+            hostname: ieee13-1-rtu
+            snapshot: true
+            vm_type: kvm
+          hardware:
+            drives:
+                - image: ot-sim.qc2
+            memory: 1024
+            os_type: linux
+            vcpus: 1
+          network:
+            interfaces:
+                - address: 30.30.0.2
+                  gateway: 30.30.0.1
+                  mask: 24
+                  name: eth1
+                  proto: static
+                  type: ethernet
+                  vlan: ieee13_1_LAN
+                - address: 172.16.1.7
+                  mask: 16
+                  name: eth2
+                  proto: static
+                  type: ethernet
+                  vlan: MGMT
+          type: VirtualMachine
+        - general:
+            hostname: cap1-ied
+            snapshot: true
+            vm_type: kvm
+          hardware:
+            drives:
+                - image: ot-sim.qc2
+            memory: 1024
+            os_type: linux
+            vcpus: 1
+          network:
+            interfaces:
+                - address: 30.30.0.3
+                  gateway: 30.30.0.1
+                  mask: 24
+                  name: eth1
+                  proto: static
+                  type: ethernet
+                  vlan: ieee13_1_LAN
+                - address: 172.16.1.8
+                  mask: 16
+                  name: eth2
+                  proto: static
+                  type: ethernet
+                  vlan: MGMT
+          type: VirtualMachine
+        - general:
+            hostname: cap2-ied
+            snapshot: true
+            vm_type: kvm
+          hardware:
+            drives:
+                - image: ot-sim.qc2
+            memory: 1024
+            os_type: linux
+            vcpus: 1
+          network:
+            interfaces:
+                - address: 30.30.0.4
+                  gateway: 30.30.0.1
+                  mask: 24
+                  name: eth1
+                  proto: static
+                  type: ethernet
+                  vlan: ieee13_1_LAN
+                - address: 172.16.1.9
+                  mask: 16
+                  name: eth2
+                  proto: static
+                  type: ethernet
+                  vlan: MGMT
+          type: VirtualMachine
+        - general:
+            hostname: 671692-ied
+            snapshot: true
+            vm_type: kvm
+          hardware:
+            drives:
+                - image: ot-sim.qc2
+            memory: 1024
+            os_type: linux
+            vcpus: 1
+          network:
+            interfaces:
+                - address: 30.30.0.5
+                  gateway: 30.30.0.1
+                  mask: 24
+                  name: eth1
+                  proto: static
+                  type: ethernet
+                  vlan: ieee13_1_LAN
+                - address: 172.16.1.10
+                  mask: 16
+                  name: eth2
+                  proto: static
+                  type: ethernet
+                  vlan: MGMT
+          type: VirtualMachine
+        - general:
+            hostname: regfaseb-ied
+            snapshot: true
+            vm_type: kvm
+          hardware:
+            drives:
+                - image: ot-sim.qc2
+            memory: 1024
+            os_type: linux
+            vcpus: 1
+          network:
+            interfaces:
+                - address: 30.30.0.6
+                  gateway: 30.30.0.1
+                  mask: 24
+                  name: eth1
+                  proto: static
+                  type: ethernet
+                  vlan: ieee13_1_LAN
+                - address: 172.16.1.11
+                  mask: 16
+                  name: eth2
+                  proto: static
+                  type: ethernet
+                  vlan: MGMT
+          type: VirtualMachine
+        - general:
+            hostname: regfasec-ied
+            snapshot: true
+            vm_type: kvm
+          hardware:
+            drives:
+                - image: ot-sim.qc2
+            memory: 1024
+            os_type: linux
+            vcpus: 1
+          network:
+            interfaces:
+                - address: 30.30.0.7
+                  gateway: 30.30.0.1
+                  mask: 24
+                  name: eth1
+                  proto: static
+                  type: ethernet
+                  vlan: ieee13_1_LAN
+                - address: 172.16.1.12
+                  mask: 16
+                  name: eth2
+                  proto: static
+                  type: ethernet
+                  vlan: MGMT
+          type: VirtualMachine
+        - general:
+            hostname: regfasea-ied
+            snapshot: true
+            vm_type: kvm
+          hardware:
+            drives:
+                - image: ot-sim.qc2
+            memory: 1024
+            os_type: linux
+            vcpus: 1
+          network:
+            interfaces:
+                - address: 30.30.0.8
+                  gateway: 30.30.0.1
+                  mask: 24
+                  name: eth1
+                  proto: static
+                  type: ethernet
+                  vlan: ieee13_1_LAN
+                - address: 172.16.1.13
+                  mask: 16
+                  name: eth2
+                  proto: static
+                  type: ethernet
+                  vlan: MGMT
+          type: VirtualMachine
+        - general:
+            hostname: control-center-edge-router
+            snapshot: true
+            vm_type: kvm
+          hardware:
+            drives:
+                - image: vyatta.qc2
+            memory: 1024
+            os_type: vyatta
+            vcpus: 1
+          network:
+            interfaces:
+                - address: 20.20.0.1
+                  mask: 16
+                  name: IF0
+                  proto: static
+                  type: ethernet
+                  vlan: Control_Center_LAN
+                - address: 10.0.0.1
+                  mask: 8
+                  name: IF1
+                  proto: ospf
+                  type: ethernet
+                  vlan: WAN
+            ospf:
+                areas:
+                    - area_id: 0
+                      area_networks:
+                        - network: 10.0.0.0/8
+                dead_interval: 60
+                hello_interval: 10
+                retrans_interval: 5
+                router_id: 20.20.0.1
+          type: Router
+        - general:
+            hostname: ieee13-1-edge-router
+            snapshot: true
+            vm_type: kvm
+          hardware:
+            drives:
+                - image: vyatta.qc2
+            memory: 1024
+            os_type: vyatta
+            vcpus: 1
+          network:
+            interfaces:
+                - address: 30.30.0.1
+                  mask: 24
+                  name: IF0
+                  proto: static
+                  type: ethernet
+                  vlan: ieee13_1_LAN
+                - address: 10.0.0.2
+                  mask: 8
+                  name: IF1
+                  proto: ospf
+                  type: ethernet
+                  vlan: WAN
+            ospf:
+                areas:
+                    - area_id: 0
+                      area_networks:
+                        - network: 10.0.0.0/8
+                dead_interval: 60
+                hello_interval: 10
+                retrans_interval: 5
+                router_id: 30.30.0.1
+          type: Router
