@@ -1,10 +1,7 @@
 import datetime
 import os
-import subprocess
-import shlex
 import json
 import itertools
-import threading
 import time
 import sys
 import csv
@@ -32,15 +29,17 @@ class Demo(ComponentBase):
         logger.log('INFO', f'Output directory: {output_dir}') 
         filePath = os.path.join(output_dir, f'i_wonder_what_the_time_is.txt')
 
+        f.write(datetime.datetime.now())
+
         #check yaml to see if we want to include the year or not
-        include_year = self.metadata.get("include_year", True)
+        #include_year = self.metadata.get("include_year", True)
 
         #write to the file
-        f = open(filePath, "a")
-        if include_year:
-            f.write((datetime.datetime.now()).strftime("%m-%d %H:%M"))
-        else:
-            f.write(datetime.datetime.now())
+        #f = open(filePath, "a")
+        #if include_year:
+        #    f.write((datetime.datetime.now()).strftime("%m-%d %H:%M"))
+        #else:
+        #    f.write(datetime.datetime.now())
 
     def stop(self):
         logger.log('INFO', f'Stopping user component: {self.name}')
