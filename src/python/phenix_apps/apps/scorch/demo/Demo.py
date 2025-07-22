@@ -31,15 +31,15 @@ class Demo(ComponentBase):
         filePath = os.path.join(output_dir, f'i_wonder_what_time_it_is.txt')
 
         #check yaml to see if we want to include the year or not
-        include_year = self.metadata.get("include_year", False)
+        include_year = self.metadata.get("include_year", True)
 
         #write to the file
         f = open(filePath, "a")
 
         if include_year:
-            f.write(str((datetime.datetime.now()).strftime("%m-%d %H:%M")))
-        else:
             f.write(str(datetime.datetime.now()))
+        else:
+            f.write(str((datetime.datetime.now()).strftime("%m-%d %H:%M")))
 
     def stop(self):
         logger.log('INFO', f'Stopping user component: {self.name}')
