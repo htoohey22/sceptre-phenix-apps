@@ -37,7 +37,8 @@ class Demo(ComponentBase):
         f = open(filePath, "a")
 
         if include_year:
-            f.write((datetime.datetime.now()).strftime("%m-%d %H:%M"))
+            #f.write((datetime.datetime.now()).strftime("%m-%d %H:%M"))
+            f.write(datetime.datetime.now())
         else:
             f.write(datetime.datetime.now())
 
