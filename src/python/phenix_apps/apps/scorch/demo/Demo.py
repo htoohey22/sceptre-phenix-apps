@@ -34,7 +34,7 @@ class Demo(ComponentBase):
         f.write(str(datetime.datetime.now()))
 
         #check yaml to see if we want to include the year or not
-        #include_year = self.metadata.get("include_year", True)
+        include_year = self.metadata.get("include_year", True)
 
         #if include_year:
         #    f.write((datetime.datetime.now()).strftime("%m-%d %H:%M"))
