@@ -28,7 +28,7 @@ func extractMetadata(data map[string]interface{}) (MirrorAppMetadataV1, error) {
 			return amd, fmt.Errorf("decoding app metadata: %w", err)
 		}
 	}
-
+	
 	return amd, nil
 }
 

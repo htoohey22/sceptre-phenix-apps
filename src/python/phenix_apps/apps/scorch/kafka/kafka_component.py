@@ -44,7 +44,7 @@ class Kafka(ComponentBase):
         #get kafka ip addresses and concatenate them into a list of strings in format ip:port
         kafka_ips = []
         kafka_endpoints = self.metadata.get("kafka_endpoints", [{"ip": "127.0.0.1", "port": "9092"}]) 
-
+        
         for item in kafka_endpoints:
             kafka_ips.append(item["ip"] + ":" + item["port"])
 
