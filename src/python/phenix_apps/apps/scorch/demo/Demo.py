@@ -18,13 +18,13 @@ class Demo(ComponentBase):
         #get directory, make output txt file
         output_dir = self.base_dir
         logger.log('INFO', f'Output directory: {output_dir}') 
-        filePath = os.path.join(output_dir, f'i_wonder_what_time_it_is.txt')
+        filePath = os.path.join(output_dir, f'what_time_is_it.txt')
+        f = open(filePath, "a")
 
         #check yaml to see if we want to include the year or not
         include_year = self.metadata.get("include_year", True)
 
-        #write to the file
-        f = open(filePath, "a")
+        f.write(str(1.0))
 
         if include_year:
             f.write(str(datetime.datetime.now()))
@@ -32,8 +32,8 @@ class Demo(ComponentBase):
             f.write(str((datetime.datetime.now()).strftime("%m-%d %H:%M")))
 
     def stop(self):
-        logger.log('INFO', f'Stopping user component: {self.name}')
         #nothing really needs to be stopped for this, we didn't start any services... but if we did, we could stop those here
+        logger.log('INFO', f'Stopping user component: {self.name}')
 
 def main():
     Demo()
