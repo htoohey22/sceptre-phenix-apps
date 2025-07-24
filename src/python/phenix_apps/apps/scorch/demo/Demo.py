@@ -24,8 +24,6 @@ class Demo(ComponentBase):
         #check yaml to see if we want to include the year or not
         include_year = self.metadata.get("include_year", True)
 
-        f.write(str(1.0))
-
         if include_year:
             f.write(str(datetime.datetime.now()))
         else:
