@@ -138,6 +138,8 @@ class CC(ComponentBase):
                     else:
                         self.mm.cc_background(script)
 
+                    self.mm._background = False
+
                     self.mm.clear_cc_filter()
                     self.print(f"command '{cmd.args}' backgrounded in VM {vm.hostname}")
                 elif cmd.type == 'send':
