@@ -30,7 +30,7 @@ class Kafka(ComponentBase):
         if self.started:
             return
         else:
-            start()
+            self.start()
             self.configured = True
 
     def start(self):
