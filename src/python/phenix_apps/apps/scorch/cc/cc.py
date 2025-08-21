@@ -117,13 +117,16 @@ class CC(ComponentBase):
                                 self.print('results are valid')
                     else:
                         self.mm.cc_filter(f'name={vm.hostname}')
+                        try:
+                            if once:
+                                self.mm.cc_exec_once(script)
+                            else:
+                                self.mm.cc_exec(script)
 
-                        if once:
-                            self.mm.cc_exec_once(script)
-                        else:
-                            self.mm.cc_exec(script)
+                            self.print(f"command '{cmd.args}' executed in VM {vm.hostname} using cc")
+                        finally:
+                            self.mm.clear_cc_filter()
 
-                        self.print(f"command '{cmd.args}' executed in VM {vm.hostname} using cc")
                 elif cmd.type == 'background':
                     once = cmd.get('once', True)
 
@@ -132,16 +135,15 @@ class CC(ComponentBase):
                     script = self.__send_cmd_as_file(vm.hostname, cmd.args)
 
                     self.mm.cc_filter(f'name={vm.hostname}')
+                    try:
+                        if once:
+                            self.mm.cc_background_once(script)
+                        else:
+                            self.mm.cc_background(script)
 
-                    if once:
-                        self.mm.cc_background_once(script)
-                    else:
-                        self.mm.cc_background(script)
-
-                    self.mm._background = False
-
-                    self.mm.clear_cc_filter()
-                    self.print(f"command '{cmd.args}' backgrounded in VM {vm.hostname}")
+                        self.print(f"command '{cmd.args}' backgrounded in VM {vm.hostname}")
+                    finally:
+                        self.mm.clear_cc_filter()
                 elif cmd.type == 'send':
                     args = cmd.args.split(':')
                     src  = None
