@@ -245,6 +245,18 @@ class AppBase(object):
                 hosts.append(node)
 
         return hosts
+    
+    def extract_node_interface_for_ip(self, address):
+        if ':' in address:
+            address, _ = address.split(':', 1)
+
+        nodes = self.experiment.spec.topology.nodes
+
+        for node in nodes:
+            for i in node.network.interfaces:
+                if 'address' in i and i['address'] == address:
+                    return i['name']
+        return None
 
     def extract_labeled_nodes(self, labels):
         return self.extract_nodes_label(labels)
