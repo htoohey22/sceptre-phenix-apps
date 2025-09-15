@@ -16,8 +16,8 @@ from kafka import KafkaConsumer
 from kafka.errors import KafkaError
 from pathlib import Path
 
-#PHENIX_LOG = "/var/log/phenix/phenix.log"
-PHENIX_LOG = os.Getenv("PHENIX_LOG_FILE")
+PHENIX_LOG = "/var/log/phenix/phenix.log"
+#PHENIX_LOG = os.Getenv("PHENIX_LOG_FILE")
 
 class Kafka(ComponentBase):
     def __init__(self):
