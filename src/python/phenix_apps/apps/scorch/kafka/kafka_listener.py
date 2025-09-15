@@ -29,15 +29,16 @@ def run(csvBool, path, kafka_ips, topics):
         enable_auto_commit=False,
         value_deserializer=lambda m: json.loads(m.decode('utf-8'))
     )
-    #list of all topic names we want the consumer to subscribe to
-    subscribedTopics = []
-    foundTopics = False
 
     #get all topic names
     if not topics:
         consumer.subscribe(pattern=".*")
         
     else:
+        #list of all topic names we want the consumer to subscribe to
+        subscribedTopics = []
+        foundTopics = False
+        
         for topic in topics:
             name =  topic.get("name")
 
