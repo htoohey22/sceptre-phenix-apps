@@ -21,8 +21,9 @@ metadata:
 
 ```yaml
 - metadata:
-    kafka_ips:
-      - 1.0.0.0:9092 #Kafka uses port 9092
+    kafka_endpoints:
+      - ip: "1.0.0.0"
+        port: "9092"
     csv: false
     topics:
       - filter:
