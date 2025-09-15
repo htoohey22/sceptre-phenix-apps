@@ -38,6 +38,8 @@ def run(csvBool, path, kafka_ips, topics):
         #list of all topic names we want the consumer to subscribe to
         subscribedTopics = []
         foundTopics = False
+
+        start = time.time()
         
         for topic in topics:
             name =  topic.get("name")
@@ -47,7 +49,8 @@ def run(csvBool, path, kafka_ips, topics):
                 foundTopics = False
                 filteredName = name.split('*')[0] #we don't care about anything right of the wildcard
                 pattern = f'^{re.escape(filteredName)}.*'
-                while not foundTopics: #if this is a new experiment, kafka may not have populated any tags... so wait until it has
+                #if this is a new experiment, kafka may not have populated any tags... so wait until it has (up to 305 seconds, then quit)
+                while not foundTopics and (time.time() - start) < 305:
                     for topic in consumer.topics():
                         if str(filteredName) in str(topic):
                             subscribedTopics.append(topic)
