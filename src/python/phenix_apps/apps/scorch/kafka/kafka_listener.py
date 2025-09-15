@@ -73,7 +73,7 @@ def run(csvBool, path, kafka_ips, topics):
 
                 #grab unfiltered/ unprocessed message data
                 data = message.value
-            
+
                 if not topics:
                     if csvBool:
                         all_keys.update(data.keys())
@@ -114,8 +114,6 @@ def run(csvBool, path, kafka_ips, topics):
                     for filterVal in topic.get("filter", []):
                         key = filterVal.get("key")
                         value = filterVal.get("value")
-
-                        wildcardValue = False
 
                         if key in data:
                             actualValue = str(data.get(key)).lower()
