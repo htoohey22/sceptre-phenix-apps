@@ -31,17 +31,15 @@ def run(csvBool, path, kafka_ips, topics):
     )
 
     #list of all topic names we want the consumer to subscribe to
-    #subscribedTopics = []
-    #foundTopics = False
+    subscribedTopics = []
+    foundTopics = False
 
     #get all topic names
     if not topics:
         consumer.subscribe(pattern=".*")
         
     else:
-        #list of all topic names we want the consumer to subscribe to
-        subscribedTopics = []
-        foundTopics = False
+        
 
         start = time.time()
         
