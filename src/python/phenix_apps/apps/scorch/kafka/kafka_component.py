@@ -83,7 +83,7 @@ class Kafka(ComponentBase):
             #global PHENIX_LOG
             log_file = open(PHENIX_LOG, '+a')
 
-            response = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=sys.stdout, stderr=sys.stderr, start_new_session=True)
+            response = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
             self._create_pid_file(response.pid) #write PID to a file so that it can be found and killed later
             response.poll() #prevents hang
         except Exception as e:
