@@ -40,7 +40,7 @@ class Kafka(ComponentBase):
         if self.configured:
             return
         self.started = True
-        
+        print(self.exp_name)
         logger.log('INFO', f'Starting user component: {self.name}')
 
         #get kafka ip addresses and concatenate them into a list of strings in format ip:port
