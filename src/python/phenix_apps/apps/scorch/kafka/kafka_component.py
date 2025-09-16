@@ -18,8 +18,8 @@ from kafka import KafkaConsumer
 from kafka.errors import KafkaError
 from pathlib import Path
 
-PHENIX_LOG = "/var/log/phenix/phenix.log"
-#PHENIX_LOG = os.getenv("PHENIX_LOG_FILE")
+#PHENIX_LOG = "/var/log/phenix/phenix.log"
+PHENIX_LOG = os.getenv("PHENIX_LOG_FILE")
 #PHENIX_LOG = settings.PHENIX_LOG_FILE
 
 class Kafka(ComponentBase):
@@ -80,6 +80,9 @@ class Kafka(ComponentBase):
             #output to the phenix log
             global PHENIX_LOG
             log_file = open(PHENIX_LOG, '+a')
+
+            logger.log('INFO', f'phenix_log location: {PHENIX_LOG}')
+
             response = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=log_file, stderr=log_file, start_new_session=True)
             self._create_pid_file(response.pid) #write PID to a file so that it can be found and killed later
             response.poll() #prevents hang
