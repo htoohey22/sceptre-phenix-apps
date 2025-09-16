@@ -11,7 +11,7 @@ exe:  phenix-scorch-component-kafka
 
 ```yaml
 metadata:
-    kafka_ips: [<string>] #IP_address:port_number sending Kafka data
+    kafka_endpoints: [(ip, port)] #IP_address:port_number sending Kafka data
     csv: <bool> #boolean indicating if the output should be a csv, if false we return a JSON file
     topics: [([(key, value)]], name)] #a list containing all topics to subscribe to and key value pairs to filter by (see yaml example for formatting)
 ```
@@ -21,8 +21,9 @@ metadata:
 
 ```yaml
 - metadata:
-    kafka_ips:
-      - 1.0.0.0:9092 #Kafka uses port 9092
+    kafka_endpoints:
+      - ip: "1.0.0.0"
+        port: "9092"
     csv: false
     topics:
       - filter:

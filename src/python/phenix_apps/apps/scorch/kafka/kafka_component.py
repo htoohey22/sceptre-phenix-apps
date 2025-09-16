@@ -9,14 +9,14 @@ import csv
 import re
 import os
 import time
+import logging
 
+import phenix_apps.common.settings as settings
 from phenix_apps.apps.scorch import ComponentBase
 from phenix_apps.common import logger, utils
 from kafka import KafkaConsumer
 from kafka.errors import KafkaError
 from pathlib import Path
-
-PHENIX_LOG = "/var/log/phenix/phenix.log"
 
 class Kafka(ComponentBase):
     def __init__(self):
@@ -40,7 +40,6 @@ class Kafka(ComponentBase):
         if self.configured:
             return
         self.started = True
-        self.scorch_kafka_running = True
         logger.log('INFO', f'Starting user component: {self.name}')
 
         #get kafka ip addresses and concatenate them into a list of strings in format ip:port
@@ -66,17 +65,18 @@ class Kafka(ComponentBase):
         
         kafka_ips_str = ",".join(kafka_ips)
         topics_str = json.dumps(topics)
+
+        print(f'Output Directory: {output_dir}')
         
         #pass the inputs to the python file (which we execute as a separate process)
         executable  = str(Path(Path(__file__).parent, "kafka_listener.py"))
-        arguments = f"python3 {executable} {csv_bool} '{self.path}' {kafka_ips_str} '{topics_str}'"
+        arguments = f"python3 {executable} {csv_bool} '{self.path}' {kafka_ips_str} '{topics_str}' '{self.exp_name}'"
         command = shlex.split(arguments)
+        
 
         try:
-            #output to the phenix log
-            global PHENIX_LOG
-            log_file = open(PHENIX_LOG, '+a')
-            response = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=log_file, stderr=log_file, start_new_session=True)
+
+            response = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
             self._create_pid_file(response.pid) #write PID to a file so that it can be found and killed later
             response.poll() #prevents hang
         except Exception as e:

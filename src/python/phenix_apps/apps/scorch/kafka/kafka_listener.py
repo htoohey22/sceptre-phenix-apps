@@ -17,7 +17,7 @@ from phenix_apps.common import logger, utils
 from kafka import KafkaConsumer
 from kafka.errors import KafkaError
 
-def run(csvBool, path, kafka_ips, topics):
+def run(csvBool, path, kafka_ips, topics, exp_name):
     kafka_ips = kafka_ips.split(',')
     topics = json.loads(topics)
 
@@ -29,24 +29,28 @@ def run(csvBool, path, kafka_ips, topics):
         enable_auto_commit=False,
         value_deserializer=lambda m: json.loads(m.decode('utf-8'))
     )
-    #list of all topic names we want the consumer to subscribe to
-    subscribedTopics = []
-    foundTopics = False
 
     #get all topic names
     if not topics:
-        consumer.subscribe(pattern=".*")
+        consumer.subscribe(pattern=(exp_name + ".*"))
         
     else:
+        start = time.time()
+
+        #list of all topic names we want the consumer to subscribe to
+        subscribedTopics = []
+        foundTopics = False
+
         for topic in topics:
             name =  topic.get("name")
-
+        
             #handle wildcards in the name, this only supports right wildcards
             if '*' in name:
                 foundTopics = False
                 filteredName = name.split('*')[0] #we don't care about anything right of the wildcard
                 pattern = f'^{re.escape(filteredName)}.*'
-                while not foundTopics: #if this is a new experiment, kafka may not have populated any tags... so wait until it has
+                #if this is a new experiment, kafka may not have populated any tags... so wait until it has (up to 305 seconds, then quit)
+                while not foundTopics and (time.time() - start) < 305:
                     for topic in consumer.topics():
                         if str(filteredName) in str(topic):
                             subscribedTopics.append(topic)
@@ -69,7 +73,7 @@ def run(csvBool, path, kafka_ips, topics):
 
                 #grab unfiltered/ unprocessed message data
                 data = message.value
-            
+
                 if not topics:
                     if csvBool:
                         all_keys.update(data.keys())
@@ -110,8 +114,6 @@ def run(csvBool, path, kafka_ips, topics):
                     for filterVal in topic.get("filter", []):
                         key = filterVal.get("key")
                         value = filterVal.get("value")
-
-                        wildcardValue = False
 
                         if key in data:
                             actualValue = str(data.get(key)).lower()
@@ -159,5 +161,6 @@ if __name__ == '__main__':
     path = sys.argv[2]
     kafka_ips = sys.argv[3]
     topics = sys.argv[4]
+    exp_name = sys.argv[5]
 
-    run(csvBool, path, kafka_ips, topics)
+    run(csvBool, path, kafka_ips, topics, exp_name)
