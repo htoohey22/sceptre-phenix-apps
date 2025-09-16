@@ -44,7 +44,7 @@ def run(csvBool, path, kafka_ips, topics):
         
         for topic in topics:
             name =  topic.get("name")
-
+        
             #handle wildcards in the name, this only supports right wildcards
             if '*' in name:
                 foundTopics = False
