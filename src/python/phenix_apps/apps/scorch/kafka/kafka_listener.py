@@ -39,8 +39,6 @@ def run(csvBool, path, kafka_ips, topics):
         consumer.subscribe(pattern=".*")
         
     else:
-        
-
         start = time.time()
         
         for topic in topics:
