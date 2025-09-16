@@ -40,7 +40,6 @@ class Kafka(ComponentBase):
         if self.configured:
             return
         self.started = True
-        print(self.exp_name)
         logger.log('INFO', f'Starting user component: {self.name}')
 
         #get kafka ip addresses and concatenate them into a list of strings in format ip:port
@@ -71,9 +70,9 @@ class Kafka(ComponentBase):
         
         #pass the inputs to the python file (which we execute as a separate process)
         executable  = str(Path(Path(__file__).parent, "kafka_listener.py"))
-        arguments = f"python3 {executable} {csv_bool} '{self.path}' {kafka_ips_str} '{topics_str}'"
+        arguments = f"python3 {executable} {csv_bool} '{self.path}' {kafka_ips_str} '{topics_str}' '{self.exp_name}'"
         command = shlex.split(arguments)
-
+        
 
         try:
 

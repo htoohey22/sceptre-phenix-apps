@@ -17,7 +17,7 @@ from phenix_apps.common import logger, utils
 from kafka import KafkaConsumer
 from kafka.errors import KafkaError
 
-def run(csvBool, path, kafka_ips, topics):
+def run(csvBool, path, kafka_ips, topics, exp_name):
     kafka_ips = kafka_ips.split(',')
     topics = json.loads(topics)
 
@@ -32,7 +32,7 @@ def run(csvBool, path, kafka_ips, topics):
 
     #get all topic names
     if not topics:
-        consumer.subscribe(pattern=".*")
+        consumer.subscribe(pattern=(exp_name + ".*"))
         
     else:
         start = time.time()
@@ -161,5 +161,6 @@ if __name__ == '__main__':
     path = sys.argv[2]
     kafka_ips = sys.argv[3]
     topics = sys.argv[4]
+    exp_name = sys.argv[5]
 
-    run(csvBool, path, kafka_ips, topics)
+    run(csvBool, path, kafka_ips, topics, exp_name)
