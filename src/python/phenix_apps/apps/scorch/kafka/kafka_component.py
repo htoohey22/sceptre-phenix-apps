@@ -80,7 +80,7 @@ class Kafka(ComponentBase):
         logger.log('INFO', f'phenix_log location: {PHENIX_LOG}')
         try:
             #output to the phenix log
-            global PHENIX_LOG
+            #global PHENIX_LOG
             log_file = open(PHENIX_LOG, '+a')
 
             response = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=log_file, stderr=log_file, start_new_session=True)
