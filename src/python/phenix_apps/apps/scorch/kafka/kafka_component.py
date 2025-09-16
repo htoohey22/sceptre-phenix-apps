@@ -70,6 +70,8 @@ class Kafka(ComponentBase):
         
         kafka_ips_str = ",".join(kafka_ips)
         topics_str = json.dumps(topics)
+
+        print(f'Output Directory: {output_dir}')
         
         #pass the inputs to the python file (which we execute as a separate process)
         executable  = str(Path(Path(__file__).parent, "kafka_listener.py"))
