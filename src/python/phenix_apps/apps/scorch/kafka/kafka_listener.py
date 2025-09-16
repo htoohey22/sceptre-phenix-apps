@@ -43,7 +43,6 @@ def run(csvBool, path, kafka_ips, topics):
         subscribedTopics = []
         foundTopics = False
 
-
         start = time.time()
         
         for topic in topics:
