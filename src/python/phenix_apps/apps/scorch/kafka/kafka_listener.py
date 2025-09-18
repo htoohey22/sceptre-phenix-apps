@@ -58,14 +58,16 @@ def run(csvBool, path, kafka_ips, topics, exp_name):
                         foundTopics = True
             elif name:
                 subscribedTopics.append(name)
-
+        
         #subscribe to all topic names
         consumer.subscribe(subscribedTopics)
+
 
     with open(path, 'a', newline='', encoding='utf-8') as file:
         writer = None
         wrote_header = False
         all_keys = set()
+        file.write(subscribedTopics)
 
         while True:
             for message in consumer:
