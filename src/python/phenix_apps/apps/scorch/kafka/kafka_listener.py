@@ -52,11 +52,11 @@ def run(csvBool, path, kafka_ips, topics, exp_name):
                 #if this is a new experiment, kafka may not have populated any tags... so wait until it has (up to 305 seconds, then quit)
                 while not foundTopics and (time.time() - start) < 305:
                     for topic in consumer.topics():
-                        if str(filteredName) in str(topic):
+                        if str(filteredName) in str(topic) and topic not in subscribedTopics:
                             subscribedTopics.append(topic)
                     if subscribedTopics:
                         foundTopics = True
-            elif name:
+            elif name and name not in subscribedTopics:
                 subscribedTopics.append(name)
         
         #subscribe to all topic names
