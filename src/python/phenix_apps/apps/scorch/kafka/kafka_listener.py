@@ -62,7 +62,6 @@ def run(csvBool, path, kafka_ips, topics, exp_name, wait_duration):
         #subscribe to all topic names
         consumer.subscribe(subscribedTopics)
 
-
     with open(path, 'a', newline='', encoding='utf-8') as file:
         writer = None
         wrote_header = False
