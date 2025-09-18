@@ -17,7 +17,7 @@ from phenix_apps.common import logger, utils
 from kafka import KafkaConsumer
 from kafka.errors import KafkaError
 
-def run(csvBool, path, kafka_ips, topics, exp_name):
+def run(csvBool, path, kafka_ips, topics, exp_name, wait_duration):
     kafka_ips = kafka_ips.split(',')
     topics = json.loads(topics)
 
@@ -50,7 +50,7 @@ def run(csvBool, path, kafka_ips, topics, exp_name):
                 filteredName = name.split('*')[0] #we don't care about anything right of the wildcard
                 pattern = f'^{re.escape(filteredName)}.*'
                 #if this is a new experiment, kafka may not have populated any tags... so wait until it has (up to 305 seconds, then quit)
-                while not foundTopics and (time.time() - start) < 305:
+                while not foundTopics and (time.time() - start) < wait_duration:
                     for topic in consumer.topics():
                         if str(filteredName) in str(topic) and topic not in subscribedTopics:
                             subscribedTopics.append(topic)
@@ -68,6 +68,7 @@ def run(csvBool, path, kafka_ips, topics, exp_name):
         wrote_header = False
         all_keys = set()
         file.write("Subscribed topics: " + ", ".join(subscribedTopics) + "\n")
+        file.write("Subscribed topics: " + ", ".join(wait_duration) + "\n")
 
         while True:
             for message in consumer:
@@ -164,5 +165,6 @@ if __name__ == '__main__':
     kafka_ips = sys.argv[3]
     topics = sys.argv[4]
     exp_name = sys.argv[5]
+    wait_duration = sys.argv[6]
 
-    run(csvBool, path, kafka_ips, topics, exp_name)
+    run(csvBool, path, kafka_ips, topics, exp_name, wait_duration)

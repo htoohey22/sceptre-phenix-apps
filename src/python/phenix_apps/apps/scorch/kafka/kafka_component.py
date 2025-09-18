@@ -44,7 +44,8 @@ class Kafka(ComponentBase):
 
         #get kafka ip addresses and concatenate them into a list of strings in format ip:port
         kafka_ips = []
-        kafka_endpoints = self.metadata.get("kafka_endpoints", [{"ip": "127.0.0.1", "port": "9092"}]) 
+        kafka_endpoints = self.metadata.get("kafka_endpoints", [{"ip": "127.0.0.1", "port": "9092"}])
+        wait_duration = self.metadata.get("wait_duration", 305)
 
         for item in kafka_endpoints:
             kafka_ips.append(item["ip"] + ":" + item["port"])
@@ -70,7 +71,7 @@ class Kafka(ComponentBase):
         
         #pass the inputs to the python file (which we execute as a separate process)
         executable  = str(Path(Path(__file__).parent, "kafka_listener.py"))
-        arguments = f"python3 {executable} {csv_bool} '{self.path}' {kafka_ips_str} '{topics_str}' '{self.exp_name}'"
+        arguments = f"python3 {executable} {csv_bool} '{self.path}' {kafka_ips_str} '{topics_str}' '{self.exp_name}' '{wait_duration}'"
         command = shlex.split(arguments)
         
 

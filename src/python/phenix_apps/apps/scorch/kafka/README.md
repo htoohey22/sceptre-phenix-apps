@@ -11,9 +11,10 @@ exe:  phenix-scorch-component-kafka
 
 ```yaml
 metadata:
-    kafka_endpoints: [(ip, port)] #IP_address:port_number sending Kafka data
-    csv: <bool> #boolean indicating if the output should be a csv, if false we return a JSON file
-    topics: [([(key, value)]], name)] #a list containing all topics to subscribe to and key value pairs to filter by (see yaml example for formatting)
+    kafka_endpoints: [(ip, port)] #[REQUIRED] IP_address:port_number sending Kafka data
+    csv: <bool> #[OPTIONAL] boolean indicating if the output should be a csv, if false we return a JSON file
+    wait_duration: <int> #[OPTIONAL] number of seconds to wait for topics to populate at the beginning of the experiment before exiting (defaults to 305 seconds)
+    topics: [([(key, value)], name)] #[OPTIONAL] a list containing all topics to subscribe to and key value pairs to filter by (see yaml example for formatting)
 ```
 <br />
 
@@ -25,15 +26,16 @@ metadata:
       - ip: "1.0.0.0"
         port: "9092"
     csv: false
+    wait_duration: 700
     topics:
       - filter:
-          - key: foo
-            value: bar
-          - key: foo2
-            value: bar2
-        name: {{BRANCH_NAME}}.foo.bar
+          - key: name # The name of a data type with in a topic that is being filtered by
+            value: foo # The value of a key to filter by
+          - key: deviceOn
+            value: False
+        name: {{BRANCH_NAME}}.foo.bar* # Wildcards are acceptable in topic names; however, if you have multiple duplicate topics, that topic data will not be duplicated in the logs
       - filter:
-          - key: foo3
-            value: bar* #wildcards work for values
-        name: {{BRANCH_NAME}}.foo2.bar2
+          - key: name
+            value: bar* # Wildcards work for values
+        name: {{BRANCH_NAME}}.foo.bar2
 ```
