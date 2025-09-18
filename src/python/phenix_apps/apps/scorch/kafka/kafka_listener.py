@@ -50,7 +50,7 @@ def run(csvBool, path, kafka_ips, topics, exp_name, wait_duration):
                 filteredName = name.split('*')[0] #we don't care about anything right of the wildcard
                 pattern = f'^{re.escape(filteredName)}.*'
                 #if this is a new experiment, kafka may not have populated any tags... so wait until it has (up to 305 seconds, then quit)
-                while not foundTopics and (time.time() - start) < wait_duration:
+                while not foundTopics and (time.time() - start) < int(wait_duration):
                     for topic in consumer.topics():
                         if str(filteredName) in str(topic) and topic not in subscribedTopics:
                             subscribedTopics.append(topic)
@@ -67,7 +67,7 @@ def run(csvBool, path, kafka_ips, topics, exp_name, wait_duration):
         wrote_header = False
         all_keys = set()
         file.write("Subscribed topics: " + ", ".join(subscribedTopics) + "\n")
-        #file.write("Subscribed topics: " + str(wait_duration) + "\n")
+        file.write("Subscribed topics: " + str(wait_duration) + "\n")
 
         while True:
             for message in consumer:
