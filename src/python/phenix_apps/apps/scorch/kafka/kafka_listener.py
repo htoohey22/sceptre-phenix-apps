@@ -66,8 +66,6 @@ def run(csvBool, path, kafka_ips, topics, exp_name, wait_duration):
         writer = None
         wrote_header = False
         all_keys = set()
-        file.write("Subscribed topics: " + ", ".join(subscribedTopics) + "\n")
-        file.write("Subscribed topics: " + str(wait_duration) + "\n")
 
         while True:
             for message in consumer:

@@ -49,7 +49,7 @@ class Kafka(ComponentBase):
 
         for item in kafka_endpoints:
             kafka_ips.append(item["ip"] + ":" + item["port"])
-
+        
         logger.log('INFO', f'Kafka_ips list: {kafka_ips}')
 
         topics = self.metadata.get("topics", [])
